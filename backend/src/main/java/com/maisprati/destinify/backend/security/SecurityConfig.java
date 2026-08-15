@@ -27,9 +27,15 @@ public class SecurityConfig {
         return httpSecurity
                 .authorizeHttpRequests(
                         request -> {
-                    request.requestMatchers("/api/auth",
-                                            "/api/auth/**",
-                                            "/api/users/**").permitAll();
+                    request.requestMatchers(
+                            "/api/auth/login",
+                            "/api/users/register").permitAll();
+                    request.requestMatchers("/api/users/all-users").hasRole("ADMIN");
+                    request.requestMatchers(
+                            "/api/auth/update-token",
+                            "/api/users/{id}", // mudar depois
+                            "/api/users/{id}/password",
+                            "/api/users/user/{id}").hasRole("CLIENT");
                     request.anyRequest().authenticated();
                 })
                 .csrf(AbstractHttpConfigurer::disable)
