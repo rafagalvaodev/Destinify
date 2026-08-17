@@ -20,6 +20,7 @@ public class UserMapper {
         userCreate.setName(userDto.name());
         userCreate.setEmail(userDto.email());
         userCreate.setPassword(userDto.password());
+        userCreate.setBirthdate(userDto.birthdate());
 
         return userCreate;
     }
@@ -29,6 +30,7 @@ public class UserMapper {
                 user.getId(),
                 user.getName(),
                 user.getEmail(),
+                user.getBirthdate(),
                 user.getRole());
     }
 }
