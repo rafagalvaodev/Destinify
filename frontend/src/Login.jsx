@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './Login.css';
 
-export default function Login() {
+export default function Login({ setPaginaAtual }) {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
 
@@ -70,7 +70,10 @@ export default function Login() {
             </button>
 
             <p className="signup-text">
-              Ainda não tem conta? <a href="#register">Registre-se aqui</a>
+                Ainda não tem conta?{' '}
+                <a href="#register" onClick={(e) => { e.preventDefault(); setPaginaAtual('register'); }}>
+                  Registre-se aqui
+                </a>
             </p>
           </div>
         </div>
