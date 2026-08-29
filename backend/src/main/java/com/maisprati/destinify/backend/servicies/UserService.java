@@ -103,11 +103,4 @@ public class UserService implements UserDetailsService {
 
         userRepository.save(user);
     }
-
-    @Transactional(readOnly = true)
-    public UserResponse findById(Long id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        return userMapper.userResponseMapper(user);
-    }
 }

@@ -4,7 +4,6 @@ import com.maisprati.destinify.backend.servicies.AccessTokenFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -28,30 +27,15 @@ public class SecurityConfig {
         return httpSecurity
                 .authorizeHttpRequests(
                         request -> {
-                            request.requestMatchers(
-                                    "/api/auth/login",
-                                    "/api/users/register").permitAll();
-                            request.requestMatchers("/api/users/all-users").hasRole("ADMIN");
-                            request.requestMatchers(
-                                    "/api/auth/update-token",
-                                    "/api/users/{id}", // mudar depois
-                                    "/api/users/{id}/password",
-                                    "/api/users/user/{id}").hasRole("CLIENT");
-
-                            // Listar/ ver hotel: público
-                            request.requestMatchers(HttpMethod.GET, "/api/hotels", "/api/hotels/**").permitAll();
-
-                            // Criar, editar, excluir hotel: ADMIN
-                            request.requestMatchers(HttpMethod.POST, "/api/hotels", "/api/hotels/**").hasRole("ADMIN");
-                            request.requestMatchers(HttpMethod.PUT, "/api/hotels", "/api/hotels/**").hasRole("ADMIN");
-                            request.requestMatchers(HttpMethod.DELETE, "/api/hotels", "/api/hotels/**").hasRole("ADMIN");
-
-                            request.anyRequest().authenticated();
-                        })
+                    request.requestMatchers("/api/auth",
+                                            "/api/auth/**",
+                                            "/api/users/**").permitAll();
+                    request.anyRequest().authenticated();
+                })
                 .csrf(AbstractHttpConfigurer::disable)
                 .addFilterBefore(accessTokenFilter, UsernamePasswordAuthenticationFilter.class)
                 .sessionManagement(smc ->
-                        smc.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                smc.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .build();
     }
 
