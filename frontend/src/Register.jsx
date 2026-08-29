@@ -8,12 +8,12 @@ export default function Register({ setPaginaAtual }) {
 
   // Estados da Etapa 1
   const [email, setEmail] = useState('');
-  const [senha, setSenha] = useState('');
-  const [repetirSenha, setRepetirSenha] = useState('');
+  const [password, setPassword] = useState('');
+  const [repeatPassword, setRepeatPassword] = useState('');
 
   // Estados da Etapa 2
-  const [nome, setNome] = useState('');
-  const [dataNascimento, setDataNascimento] = useState('');
+  const [name, setName] = useState('');
+  const [birthdate, setBirthdate] = useState('');
   const [cpf, setCpf] = useState('');
   // Máscara de CPF: 000.000.000-00
   const handleCpfChange = (e) => {
@@ -42,7 +42,7 @@ export default function Register({ setPaginaAtual }) {
     e.preventDefault(); // Impede o recarregamento da página
     setErro('');
 
-    if (senha !== repetirSenha) {
+    if ( password!== repeatPassword) {
       setErro('As senhas não coincidem. Tente novamente.');
       return;
     }
@@ -61,17 +61,40 @@ export default function Register({ setPaginaAtual }) {
       return;
     }
 
+    try {
+      const res = await fetch('http://localhost:8080/api/users/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name,
+          email,
+          birthdate,
+          password
+        })
+      });
+
+      if (!res.ok) {
+        throw new Error('Não foi possível realizar o cadastro.');
+      }
+
+      const createdUser = await res.json();
+
+      setPaginaAtual('login');
+    } catch (erro) {
+      console.error('Erro no cadastro: ', erro);
+      setErro(erro.message);
+    }
+
     const dadosUsuario = {
       email,
-      senha,
-      nome,
-      dataNascimento,
-      cpf,
-      telefone
+      password,
+      name,
+      birthdate,
+      cpf
     };
 
-    console.log('Dados completos prontos para o Java:', dadosUsuario);
-    // Aqui entrará o fetch() para enviar ao backend
   };
 
   return (
@@ -113,8 +136,8 @@ export default function Register({ setPaginaAtual }) {
                       type="password" 
                       id="senha" 
                       placeholder="Insira sua senha" 
-                      value={senha} 
-                      onChange={(e) => { setSenha(e.target.value); setErro(''); }} 
+                      value={password} 
+                      onChange={(e) => { setPassword(e.target.value); setErro(''); }} 
                       required 
                     />
                   </div>
@@ -125,8 +148,8 @@ export default function Register({ setPaginaAtual }) {
                       type="password" 
                       id="repetirSenha" 
                       placeholder="Insira sua senha novamente" 
-                      value={repetirSenha} 
-                      onChange={(e) => { setRepetirSenha(e.target.value); setErro(''); }} 
+                      value={repeatPassword} 
+                      onChange={(e) => { setRepeatPassword(e.target.value); setErro(''); }} 
                       required 
                     />
                   </div>
@@ -160,12 +183,12 @@ export default function Register({ setPaginaAtual }) {
                 <form onSubmit={handleFinalizarRegistro} className="auth-form">
                   <div className="input-group step2-group">
                     <label htmlFor="nome">Nome completo</label>
-                    <input type="text" id="nome" placeholder="Insira seu nome completo" value={nome} onChange={(e) => setNome(e.target.value)} required />
+                    <input type="text" id="nome" placeholder="Insira seu nome completo" value={name} onChange={(e) => setName(e.target.value)} required />
                   </div>
 
                   <div className="input-group step2-group">
                     <label htmlFor="dataNascimento">Data de nascimento</label>
-                    <input type="text" id="dataNascimento" placeholder="00/00/0000" value={dataNascimento} onChange={(e) => setDataNascimento(e.target.value)} required />
+                    <input type="date" id="dataNascimento" placeholder="00/00/0000" value={birthdate} onChange={(e) => setBirthdate(e.target.value)} required />
                   </div>
 
                   <div className="input-group step2-group">

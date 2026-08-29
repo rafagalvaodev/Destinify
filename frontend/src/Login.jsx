@@ -3,12 +3,39 @@ import './Login.css';
 
 export default function Login({ setPaginaAtual }) {
   const [email, setEmail] = useState('');
-  const [senha, setSenha] = useState('');
+  const [password, setPassword] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Dados de login:', { email, senha });
-    // Lógica de conexão com o Java
+
+    try {
+
+      const res = await fetch('http://localhost:8080/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: email,
+          password: password
+        })
+      });
+
+      if (!res.ok) {
+        throw new Error('Email ou senha incorretos');
+      }
+      
+      const data = await res.json();
+
+      localStorage.setItem('accessToken', data.accessToken);
+      localStorage.setItem('refreshToken', data.refreshToken);
+
+      setPaginaAtual('dashboard');
+    }catch (erro) {
+      console.error('Erro durante o login:', erro);
+      alert(erro.message);
+    }
+    
   };
 
   return (
@@ -41,8 +68,8 @@ export default function Login({ setPaginaAtual }) {
                   type="password"
                   id="senha"
                   placeholder="Insira sua senha"
-                  value={senha}
-                  onChange={(e) => setSenha(e.target.value)}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   required
                 />
               </div>
