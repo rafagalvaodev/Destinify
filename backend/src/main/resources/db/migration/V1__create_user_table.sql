@@ -4,6 +4,5 @@ CREATE TABLE tb_users
     name VARCHAR(85) NOT NULL,
     email VARCHAR(70) NOT NULL,
     password VARCHAR(120) NOT NULL,
-    birth_date DATE,
     role VARCHAR(15) NOT NULL DEFAULT 'CLIENT'
 )
