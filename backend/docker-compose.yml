@@ -3,6 +3,8 @@ services:
         image: postgres:18-alpine
         container_name: destinify-database
         restart: unless-stopped
+        env_file:
+            - .env
         environment:
             POSTGRES_DB: ${POSTGRES_DB}
             POSTGRES_USER: ${POSTGRES_USER}
