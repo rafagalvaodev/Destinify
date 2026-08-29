@@ -1,0 +1,231 @@
+@import url('https://fonts.googleapis.com/css2?family=Arima+Madurai:wght@500&display=swap');
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Arima Madurai', serif;
+}
+
+/* Fundo azul arroxeado */
+.bg-container {
+  /* Garante que o container pegue 100% da largura e altura da tela visível */
+  min-height: 100vh;
+  width: 100vw;
+  
+  /* Cor de fundo como garantia, caso a imagem demore a carregar */
+  background-color: #555CD6; 
+  
+  /* Caminho da imagem exportada do Figma */
+  background-image: url('./imagem/fundoLogin.svg'); 
+  
+  /* Faz a imagem cobrir toda a tela, respeitando a proporção de 1920x1080 */
+  background-size: cover; 
+  
+  /* Centraliza o fundo e evita que ele se repita */
+  background-position: center;
+  background-repeat: no-repeat;
+
+  /* Fixa o fundo para ele não se mover se a página rolar */
+  background-attachment: fixed;
+  
+  /* Centraliza o card de login no meio da tela */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+/* Card Principal */
+.login-card {
+  background: #fdfdfd;
+  border-radius: 28px;
+  display: flex;
+  width: 100%;
+  max-width: 950px;
+  height: 600px; /* Altura fixa para manter proporção com a foto */
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+}
+
+/* Lado do Formulário */
+.form-section {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+/* Container interno para controlar a largura do form */
+.form-wrapper {
+  width: 100%;
+  max-width: 320px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Título Destinify */
+.logo {
+  font-family: 'Arima Madurai', serif;
+  font-weight: 500; /* Peso */
+  font-size: 40px;  /* Tamanho */
+  color: #111;
+  text-align: center;
+  margin-bottom: 35px;
+  width: 100%;
+  display: block;
+}
+
+.login-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Texto Login */
+.title {
+  font-family: 'Arima Madurai', serif;
+  font-weight: 500; /* Peso */
+  font-size: 24px;  /* Tamanho */
+  color: #222;
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+form {
+  width: 100%;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.input-group label {
+  font-size: 14px;
+  color: #555;
+  font-weight: 500;
+  text-align: left;
+  display: block; /* Isso obriga o texto a ir para a extrema esquerda */
+  width: 100%;
+}
+
+.input-group input {
+  padding: 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+  color: #333;
+}
+
+.input-group input::placeholder {
+  color: #aaa;
+}
+
+.input-group input:focus {
+  border-color: #23206A;
+}
+
+.btn-primary {
+  width: 100%;
+  padding: 12px;
+  background-color: #23206A; /* Cor azul escura do botão */
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: background-color 0.2s;
+}
+
+.btn-primary:hover {
+  background-color: #1a184f;
+}
+
+/* Espaçamento do Esqueceu a Senha */
+.forgot-wrapper {
+  text-align: left;
+  margin-top: 12px; /* Reduzido para aproximar do botão e caber no card */
+  width: 100%;
+}
+
+/* Texto Esqueceu a senha */
+.link-forgot {
+  font-size: 16px;
+  color: #333;
+  text-decoration: underline;
+}
+
+.divider {
+  font-size: 12px;
+  color: #777;
+  text-align: center;
+  margin: 20px 0;
+}
+
+/* Botão Google */
+.btn-google {
+  width: 100%;
+  padding: 10px;
+  background-color: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #555;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+.btn-google:hover {
+  background-color: #f9f9f9;
+}
+
+.google-icon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+}
+
+/* Texto de registro centralizado */
+.signup-text {
+  font-size: 12px;
+  color: #555;
+  margin-top: 25px;
+  text-align: center;
+}
+
+.signup-text a {
+  color: #333;
+  font-weight: 500;
+  text-decoration: underline;
+}
+
+.image-section {
+  flex: 1.15;
+  background-image: url('./imagem/FotoBackground.jpg');
+  background-size: cover;
+  background-position: center;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .image-section {
+    display: none;
+  }
+  .login-card {
+    height: auto;
+    padding: 40px 0;
+  }
+}
