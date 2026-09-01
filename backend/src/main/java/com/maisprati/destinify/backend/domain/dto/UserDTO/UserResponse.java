@@ -1,4 +1,4 @@
-package com.maisprati.destinify.backend.domain.dto;
+package com.maisprati.destinify.backend.domain.dto.UserDTO;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.maisprati.destinify.backend.domain.enums.Role;

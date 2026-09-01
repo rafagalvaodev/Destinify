@@ -1,4 +1,4 @@
-package com.maisprati.destinify.backend.domain.dto;
+package com.maisprati.destinify.backend.domain.dto.UserDTO;
 
 public record UpdateUser(
         String name,

@@ -1,9 +1,9 @@
 package com.maisprati.destinify.backend.controllers;
 
 import com.maisprati.destinify.backend.domain.User;
-import com.maisprati.destinify.backend.domain.dto.LoginData;
-import com.maisprati.destinify.backend.domain.dto.RefreshToken;
-import com.maisprati.destinify.backend.domain.dto.TokenResponseDTO;
+import com.maisprati.destinify.backend.domain.dto.LoginDTO.LoginData;
+import com.maisprati.destinify.backend.domain.dto.LoginDTO.RefreshToken;
+import com.maisprati.destinify.backend.domain.dto.LoginDTO.TokenResponseDTO;
 import com.maisprati.destinify.backend.repositories.UserRepository;
 import com.maisprati.destinify.backend.servicies.TokenService;
 import jakarta.validation.Valid;

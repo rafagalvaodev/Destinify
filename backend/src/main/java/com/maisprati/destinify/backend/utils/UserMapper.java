@@ -1,17 +1,12 @@
 package com.maisprati.destinify.backend.utils;
 
 import com.maisprati.destinify.backend.domain.User;
-import com.maisprati.destinify.backend.domain.dto.UserCreate;
-import com.maisprati.destinify.backend.domain.dto.UserResponse;
-import com.maisprati.destinify.backend.repositories.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.maisprati.destinify.backend.domain.dto.UserDTO.UserCreate;
+import com.maisprati.destinify.backend.domain.dto.UserDTO.UserResponse;
 import org.springframework.stereotype.Component;
 
 @Component
 public class UserMapper {
-    @Autowired
-    private UserRepository userRepository;
-
     public User userCreateMapper(UserCreate userDto){
         if(userDto==null) return null;
 

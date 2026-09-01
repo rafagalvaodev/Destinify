@@ -1,4 +1,4 @@
-package com.maisprati.destinify.backend.domain.dto;
+package com.maisprati.destinify.backend.domain.dto.LoginDTO;
 
 import jakarta.validation.constraints.NotBlank;
 
