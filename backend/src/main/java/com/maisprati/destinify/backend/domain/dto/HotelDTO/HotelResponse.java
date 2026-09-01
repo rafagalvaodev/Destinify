@@ -1,12 +1,11 @@
-package com.maisprati.destinify.backend.domain.dto;
+package com.maisprati.destinify.backend.domain.dto.HotelDTO;
 
 public record HotelResponse (
-        Long id,
+        Long hotel_id,
         String name,
         String city,
         String address,
         String description,
-        Double pricePerNight,
-        Integer stars,
+        Float stars,
         String imageUrl
 ) {}

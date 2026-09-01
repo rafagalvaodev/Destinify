@@ -1,8 +1,8 @@
 package com.maisprati.destinify.backend.utils;
 
 import com.maisprati.destinify.backend.domain.Hotel;
-import com.maisprati.destinify.backend.domain.dto.HotelCreate;
-import com.maisprati.destinify.backend.domain.dto.HotelResponse;
+import com.maisprati.destinify.backend.domain.dto.HotelDTO.HotelCreate;
+import com.maisprati.destinify.backend.domain.dto.HotelDTO.HotelResponse;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -16,7 +16,6 @@ public class HotelMapper {
         hotel.setCity(hotelCreate.city());
         hotel.setAddress(hotelCreate.address());
         hotel.setDescription(hotelCreate.description());
-        hotel.setPricePerNight(hotelCreate.pricePerNight());
         hotel.setStars(hotelCreate.stars());
         hotel.setImageUrl(hotelCreate.imageUrl());
 
@@ -25,12 +24,11 @@ public class HotelMapper {
 
     public HotelResponse hotelResponseMapper(Hotel hotel) {
         return new HotelResponse(
-        hotel.getId(),
+        hotel.getHotel_id(),
         hotel.getName(),
         hotel.getCity(),
         hotel.getAddress(),
         hotel.getDescription(),
-        hotel.getPricePerNight(),
         hotel.getStars(),
         hotel.getImageUrl());
     }

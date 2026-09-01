@@ -1,17 +1,14 @@
 package com.maisprati.destinify.backend.controllers;
 
-import com.maisprati.destinify.backend.domain.dto.UpdatePassword;
-import com.maisprati.destinify.backend.domain.dto.UpdateUser;
-import com.maisprati.destinify.backend.domain.dto.UserCreate;
-import com.maisprati.destinify.backend.domain.dto.UserResponse;
+import com.maisprati.destinify.backend.domain.dto.UserDTO.UpdatePassword;
+import com.maisprati.destinify.backend.domain.dto.UserDTO.UpdateUser;
+import com.maisprati.destinify.backend.domain.dto.UserDTO.UserCreate;
+import com.maisprati.destinify.backend.domain.dto.UserDTO.UserResponse;
 import com.maisprati.destinify.backend.servicies.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;

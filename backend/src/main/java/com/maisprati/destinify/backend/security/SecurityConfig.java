@@ -38,6 +38,9 @@ public class SecurityConfig {
                                     .requestMatchers(HttpMethod.POST,
                                     "/api/users/register").permitAll();
                             request.requestMatchers(HttpMethod.GET,
+                                    "/api/rooms/all").permitAll();
+                            request.requestMatchers(HttpMethod.GET, "/api/rooms/{id}").permitAll();
+                            request.requestMatchers(HttpMethod.GET,
                                     "/api/users/all-users").hasRole("ADMIN");
                             request.requestMatchers(
                                     "/api/auth/update-token",
@@ -53,6 +56,8 @@ public class SecurityConfig {
                             request.requestMatchers(HttpMethod.PUT, "/api/hotels", "/api/hotels/**").hasRole("ADMIN");
                             request.requestMatchers(HttpMethod.DELETE, "/api/hotels", "/api/hotels/**").hasRole("ADMIN");
 
+                            request.requestMatchers(HttpMethod.POST, "/api/rooms/newRoom").hasRole("ADMIN");
+                            request.requestMatchers(HttpMethod.DELETE, "/api/rooms/{id}").hasRole("ADMIN");
                             request.anyRequest().authenticated();
                         })
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))

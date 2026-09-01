@@ -1,11 +1,12 @@
 package com.maisprati.destinify.backend.servicies;
 
 import com.maisprati.destinify.backend.domain.User;
-import com.maisprati.destinify.backend.domain.dto.UpdatePassword;
-import com.maisprati.destinify.backend.domain.dto.UpdateUser;
-import com.maisprati.destinify.backend.domain.dto.UserCreate;
-import com.maisprati.destinify.backend.domain.dto.UserResponse;
+import com.maisprati.destinify.backend.domain.dto.UserDTO.UpdatePassword;
+import com.maisprati.destinify.backend.domain.dto.UserDTO.UpdateUser;
+import com.maisprati.destinify.backend.domain.dto.UserDTO.UserCreate;
+import com.maisprati.destinify.backend.domain.dto.UserDTO.UserResponse;
 import com.maisprati.destinify.backend.domain.enums.Role;
+import com.maisprati.destinify.backend.exceptions.UserNotFoundException;
 import com.maisprati.destinify.backend.repositories.UserRepository;
 import com.maisprati.destinify.backend.utils.UserMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,7 +36,6 @@ public class UserService implements UserDetailsService {
     public UserDetails loadUserByUsername(String email)
             throws UsernameNotFoundException {
         return userRepository.findByEmailIgnoreCase(email).orElseThrow();
-                //.orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
 
     @Transactional
@@ -72,7 +72,7 @@ public class UserService implements UserDetailsService {
     public UserResponse updateProfile (Long id, UpdateUser updateUser){
        User user = userRepository
                .findById(id)
-               .orElseThrow( () -> new RuntimeException("User not found"));
+               .orElseThrow( () -> new UserNotFoundException(id));
 
        user.setName(updateUser.name());
        user.setEmail(updateUser.email());
@@ -85,7 +85,7 @@ public class UserService implements UserDetailsService {
     public void updatePassword(Long id, UpdatePassword updatePassword) {
         User user = userRepository
                 .findById(id)
-                .orElseThrow( () -> new RuntimeException("User not found"));
+                .orElseThrow( () -> new UserNotFoundException(id));
 
         boolean currentPasswordIsValid = passwordEncoder.matches(updatePassword.currentPassword(), user.getPassword());
 
@@ -107,7 +107,7 @@ public class UserService implements UserDetailsService {
     @Transactional(readOnly = true)
     public UserResponse findById(Long id) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException(id));
         return userMapper.userResponseMapper(user);
     }
 }

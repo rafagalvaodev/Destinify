@@ -25,7 +25,6 @@ public class TokenService {
                     .withExpiresAt(expiration(30))
                     .sign(algorithm);
         }catch (JWTCreationException creationException) {
-           // throw new bisnessRule("Erro ao gerar token JWT");
             throw new RuntimeException("Erro ao gerar token jwt", creationException);
         }
     }
@@ -55,7 +54,6 @@ public class TokenService {
                     .withExpiresAt(expiration(120))
                     .sign(algorithm);
         }catch (JWTCreationException creationException) {
-            // throw new bisnessRule("Erro ao gerar token JWT");
             throw new RuntimeException("Erro ao gerar token jwt", creationException);
         }
     }
