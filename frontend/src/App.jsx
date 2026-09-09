@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import Login from './Login';
-import Register from './Register';
-import Dashboard from './dashboard/Dashboard';
+import Login from './pages/Login/Login';
+import Register from './pages/Register/Register';
+import Dashboard from './pages/Dashboard/Dashboard';
 
 function App() {
   // O estado inicial é a tela de 'login'
