@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import fotinear from '../../imagem/fotinear.gif';
+import fotinear from '../../../imagem/fotinear.gif';
 import './Dashboard.css';
 
 export default function Dashboard({ setPaginaAtual }) {

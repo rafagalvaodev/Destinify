@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import {Routes, Route} from 'react-router-dom'
 import Login from './pages/Login/Login';
 import Register from './pages/Register/Register';
 import Dashboard from './pages/Dashboard/Dashboard';
+import Homepage from './pages/Homepage/Homepage';
 
 function App() {
   // O estado inicial é a tela de 'login'
@@ -12,20 +14,14 @@ function App() {
   });
 
   return (
-    <div>
-      {/* Exibe o Login ou o Registro dependendo do estado atual */}
-      {paginaAtual === 'login' && (
-        <Login setPaginaAtual={setPaginaAtual} />
-      )}
-
-      {paginaAtual === 'register' && (
-        <Register setPaginaAtual={setPaginaAtual} />
-      )}
-
-      {paginaAtual === 'dashboard' && (
-        <Dashboard setPaginaAtual={setPaginaAtual} />
-      )}
-    </div>
+    <>
+      <Routes>
+        <Route path="/" element={ <Homepage/> } />
+        <Route path="/register" element={ <Register/> } />
+        <Route path="/login" element={ <Login/> } />
+        <Route path="/dashboard" element={ <Dashboard/> } />
+      </Routes>
+    </>
   );
 }
 
