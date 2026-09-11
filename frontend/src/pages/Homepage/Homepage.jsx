@@ -56,7 +56,7 @@ export default function Homepage() {
 
                     <div className="header__input">
                         <label for="people-button">Selecione a ocupação</label>
-                        <input type="button" name="people" id ="people-button"/>
+                        <input type="text" name="people" id ="people-button" placeholder='Ocupação'/>
                     </div>
 
                     <button type='submit'>Pesquisar</button>
