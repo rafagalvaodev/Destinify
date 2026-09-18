@@ -28,4 +28,22 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(status).body(error);
     }
+
+    @ExceptionHandler(BookingConflictException.class)
+    public ResponseEntity<ApiError> handlerBookingConflict(
+            BookingConflictException exception,
+            HttpServletRequest request
+    ) {
+        HttpStatus status = HttpStatus.CONFLICT;
+
+        ApiError error = new ApiError(
+                Instant.now(),
+                status.value(),
+                status.getReasonPhrase(),
+                exception.getMessage(),
+                request.getRequestURI()
+        );
+
+        return ResponseEntity.status(status).body(error);
+    }
 }
