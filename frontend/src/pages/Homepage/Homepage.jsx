@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import './Homepage.css'
 import '../../css/main.css'
+import HotelCard from '../../components/HotelCard/HotelCard'
+import Footer from '../../components/Footer/Footer'
 
 export default function Homepage() {
 
@@ -63,13 +65,19 @@ export default function Homepage() {
                 </form>
             </header>
             
-            <main>
+            <main className='main'>
 
+                <p className='main__subtitle'>Conheça seu próximo destino!</p>
+
+                <section className='card__layout'>
+                    <HotelCard imgURL='../../../imagem/imagem_teste.png' URL='/' ratio={[1,1,1,0.5,0]} name='Hotel Teste' location="Teste - Teste" price={100}></HotelCard>
+                    <HotelCard imgURL='../../../imagem/imagem_teste.png' URL='/' ratio={[1,1,1,0.5,0]} name='Hotel Teste' location="Teste - Teste" price={100}></HotelCard>
+                    <HotelCard imgURL='../../../imagem/imagem_teste.png' URL='/' ratio={[1,1,1,0.5,0]} name='Hotel Teste' location="Teste - Teste" price={100}></HotelCard>
+                    <HotelCard imgURL='../../../imagem/imagem_teste.png' URL='/' ratio={[1,1,1,0.5,0]} name='Hotel Teste' location="Teste - Teste" price={100}></HotelCard>
+                </section>
             </main>
 
-            <footer>
-
-            </footer>
+            <Footer />
         </>
     );
 } 

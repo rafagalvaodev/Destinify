@@ -1,0 +1,64 @@
+.card__body {
+    box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 12px;
+    background-color: #FBF9FF;
+    border-radius: 0px 0px 6px 6px;
+    padding-left: 14px;
+    padding-right: 7px;
+}
+
+.card__ratio {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.card__stars {
+    display: flex;
+    align-items: center;
+    gap: 1px;
+}
+
+.card__stars img {
+    width: 15%;
+}
+
+.card__ratio p {
+    font-family: Arial, Helvetica, sans-serif;
+    opacity: 53%;
+    font-size: 11px;
+}
+
+.card__name {
+    color: #000000;
+    font-family: Arial, Helvetica, sans-serif;
+    margin-top: 12px;
+    font-weight: bold;
+    font-size: 17px;
+}
+
+.card__location {    
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 13px;
+    opacity: 40%;
+    font-weight: bold;
+
+    margin-bottom: 20px;
+}
+
+.card__price {
+    font-family: Arial, Helvetica, sans-serif;
+    color: #A8A8A8;
+    display: flex;
+    align-items: center;
+    justify-content: end;
+    font-size: 10.5px;
+    gap: 3px;
+    padding-bottom: 6px;
+}
+
+.card__price span {
+    font-family: Arial, Helvetica, sans-serif;
+    color: #747474;
+    font-weight: bold;
+    font-size: 12px;
+}
