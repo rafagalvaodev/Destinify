@@ -58,6 +58,9 @@ public class SecurityConfig {
 
                             request.requestMatchers(HttpMethod.POST, "/api/rooms/newRoom").hasRole("ADMIN");
                             request.requestMatchers(HttpMethod.DELETE, "/api/rooms/{id}").hasRole("ADMIN");
+                            request.requestMatchers(HttpMethod.GET, "/api/bookings/user/**").hasRole("ADMIN");
+                            request.requestMatchers(HttpMethod.GET, "/api/bookings/all").hasRole("ADMIN");
+
                             request.anyRequest().authenticated();
                         })
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
