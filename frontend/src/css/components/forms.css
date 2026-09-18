@@ -70,11 +70,6 @@
     font-family: inherit;
 }
 
-/* Joga o bloco da data um pouquinho para baixo */
-.header__input:nth-child(2) .header__date {
-    padding-top: 7px;
-}
-
 .header__search input[type="text"] {
     border: none;
     background: transparent;
