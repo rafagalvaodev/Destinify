@@ -17,6 +17,13 @@
     padding: 12px;
     height: 30px;
 
+    transition: 0.3s;
+}
+
+.header__button:hover {
+    transform: scale(1.1);
+    color: var(--white);
+    background-color: var(--soft-blue);
     cursor: pointer;
 }
 
