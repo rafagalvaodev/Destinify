@@ -1,9 +1,9 @@
+import Rating from '@mui/material/Rating'
 import './HotelCard.css'
 import '../../css/main.css'
 
 export default function HotelCard({imgURL, URL, ratio, name, location, price})
 {
-    let stars = 0;
 
     return (
         <article className='card'>
@@ -14,22 +14,14 @@ export default function HotelCard({imgURL, URL, ratio, name, location, price})
                     <p>Hotel</p>
 
                     <div className='card__stars'>
-                        {ratio.map((star) => {
-                            stars++;
-                            if(star === 0)
-                                return <img key={stars} src='../../imagem/blank_star.png' alt="sem estrela"/>
-                            else if(star > 0 && star < 1)
-                                return <img key={stars} src='../../imagem/half_star.png' alt="meia estrela"/>
-                            else if(star === 1)
-                                return <img key={stars} src='../../imagem/star.png' alt ="estrela"/>
-                        })}
+                        <Rating name='size-small-half-read' defaultValue={ratio} precision={0.5} size='small' readOnly/>
                     </div>
                 </div>
 
                 <p className='card__name'>{name}</p>
                 <p className='card__location'>{location}</p>
 
-                <p className='card__price'>A partir de <span>R$ {price}</span></p>
+                <p className='card__price'>A partir de <span>R$ {price.toFixed(2)}</span></p>
             </section>
             
         </article>

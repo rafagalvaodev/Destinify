@@ -70,10 +70,10 @@ export default function Homepage() {
                 <p className='main__subtitle'>Conheça seu próximo destino!</p>
 
                 <section className='card__layout'>
-                    <HotelCard imgURL='../../../imagem/imagem_teste.png' URL='/' ratio={[1,1,1,0.5,0]} name='Hotel Teste' location="Teste - Teste" price={100}></HotelCard>
-                    <HotelCard imgURL='../../../imagem/imagem_teste.png' URL='/' ratio={[1,1,1,0.5,0]} name='Hotel Teste' location="Teste - Teste" price={100}></HotelCard>
-                    <HotelCard imgURL='../../../imagem/imagem_teste.png' URL='/' ratio={[1,1,1,0.5,0]} name='Hotel Teste' location="Teste - Teste" price={100}></HotelCard>
-                    <HotelCard imgURL='../../../imagem/imagem_teste.png' URL='/' ratio={[1,1,1,0.5,0]} name='Hotel Teste' location="Teste - Teste" price={100}></HotelCard>
+                    <HotelCard imgURL='../../../imagem/imagem_teste.png' URL='/' ratio={1.5} name='Hotel Teste' location="Teste - Teste" price={100}></HotelCard>
+                    <HotelCard imgURL='../../../imagem/imagem_teste.png' URL='/' ratio={2} name='Hotel Teste' location="Teste - Teste" price={100}></HotelCard>
+                    <HotelCard imgURL='../../../imagem/imagem_teste.png' URL='/' ratio={3} name='Hotel Teste' location="Teste - Teste" price={100}></HotelCard>
+                    <HotelCard imgURL='../../../imagem/imagem_teste.png' URL='/' ratio={5} name='Hotel Teste' location="Teste - Teste" price={100.00}></HotelCard>
                 </section>
             </main>
 
