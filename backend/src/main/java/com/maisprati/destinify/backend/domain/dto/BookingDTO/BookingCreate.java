@@ -3,14 +3,15 @@ package com.maisprati.destinify.backend.domain.dto.BookingDTO;
 import jakarta.validation.constraints.*;
 
 import java.time.LocalDate;
+import java.util.List;
 
 public record BookingCreate(
 
         @NotNull(message = "O id o hotel deve ser preenchido")
         Long hotelId,
 
-        @NotNull(message = "O id do quarto deve ser preenchido")
-        Long roomId,
+        @NotEmpty(message = "Pelo menos um quarto deve ser selecionado")
+        List<@NotNull (message = "O id do quarto deve ser preenchido") Long> roomIds,
 
         @NotNull(message = "A data de check-in deve ser preenchida")
         @FutureOrPresent(message = "A data de check-in não pode ser no passado")

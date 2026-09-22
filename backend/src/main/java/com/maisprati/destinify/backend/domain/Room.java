@@ -1,5 +1,6 @@
 package com.maisprati.destinify.backend.domain;
 
+import com.maisprati.destinify.backend.domain.enums.RoomStatus;
 import com.maisprati.destinify.backend.domain.enums.RoomType;
 import jakarta.persistence.*;
 
@@ -14,11 +15,15 @@ public class Room {
 
     private String description;
 
+    @Enumerated(EnumType.STRING)
     private RoomType roomType;
 
     private Float price;
 
     private String imgUrl;
+
+    @Enumerated(EnumType.STRING)
+    private RoomStatus roomStatus;
 
     @ManyToOne
     @JoinColumn(name = "hotel_id")
@@ -27,13 +32,15 @@ public class Room {
     public Room() {
     }
 
-    public Room(Long room_id, String name, String description, RoomType roomType, Float price, String imgUrl) {
+    public Room(Long room_id, String name, String description, RoomType roomType, Float price, String imgUrl, RoomStatus roomStatus, Hotel hotel) {
         this.room_id = room_id;
         this.name = name;
         this.description = description;
         this.roomType = roomType;
         this.price = price;
         this.imgUrl = imgUrl;
+        this.roomStatus = roomStatus;
+        this.hotel = hotel;
     }
 
     public Long getRoom_id() {
@@ -90,5 +97,13 @@ public class Room {
 
     public void setHotel(Hotel hotel) {
         this.hotel = hotel;
+    }
+
+    public RoomStatus getRoomStatus() {
+        return roomStatus;
+    }
+
+    public void setRoomStatus(RoomStatus roomStatus) {
+        this.roomStatus = roomStatus;
     }
 }

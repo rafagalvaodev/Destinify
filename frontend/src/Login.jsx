@@ -30,7 +30,7 @@ export default function Login({ setPaginaAtual }) {
       localStorage.setItem('accessToken', data.accessToken);
       localStorage.setItem('refreshToken', data.refreshToken);
 
-      setPaginaAtual('dashboard');
+      setPaginaAtual('checking');
     }catch (erro) {
       console.error('Erro durante o login:', erro);
       alert(erro.message);
@@ -86,7 +86,7 @@ export default function Login({ setPaginaAtual }) {
 
             <div className="divider">ou</div>
 
-            <button className="btn-google" type="button">
+            <button className="btn-google" type="button" onClick={() => window.location.href = 'http://localhost:8080/api/auth/login'}>
               {/* Imagem direta da web */}
               <img 
                 src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" 

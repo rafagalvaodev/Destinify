@@ -1,9 +1,11 @@
 package com.maisprati.destinify.backend.domain.dto.BookingDTO;
 
+import com.maisprati.destinify.backend.domain.dto.RoomDTO.RoomResponse;
 import com.maisprati.destinify.backend.domain.enums.BookingStatus;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 public record BookingResponse(
         Long id,
@@ -11,8 +13,7 @@ public record BookingResponse(
         String userName,
         Long hotelId,
         String hotelName,
-        Long roomId,
-        String roomName,
+        List<RoomResponse> rooms,
         LocalDate checkInDate,
         LocalDate checkOutDate,
         Integer guestsCount,
