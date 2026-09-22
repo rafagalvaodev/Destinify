@@ -33,8 +33,10 @@ public class BookingController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<BookingResponse> findById(@PathVariable Long id) {
-        return ResponseEntity.ok(bookingService.findBookingById(id));
+    public ResponseEntity<BookingResponse> findById(
+            @PathVariable Long id,
+            @AuthenticationPrincipal User loggedUser) {
+        return ResponseEntity.ok(bookingService.findBookingById(id, loggedUser));
     }
 
     @GetMapping("/me")
@@ -52,15 +54,18 @@ public class BookingController {
 
     @PatchMapping("/{id}")
     public ResponseEntity<BookingResponse> updateBooking(
+            @AuthenticationPrincipal User loggedUser,
             @PathVariable Long id,
             @Valid @RequestBody BookingUpdate bookingUpdate) {
 
-        return ResponseEntity.ok(bookingService.updateBooking(id, bookingUpdate));
+        return ResponseEntity.ok(bookingService.updateBooking(loggedUser, id, bookingUpdate));
     }
 
     @PatchMapping("/{id}/cancel")
-    public ResponseEntity<BookingResponse> cancelBooking(@PathVariable Long id) {
-        return ResponseEntity.ok(bookingService.cancelBooking(id));
+    public ResponseEntity<BookingResponse> cancelBooking(
+            @AuthenticationPrincipal User loggedUser,
+            @PathVariable Long id) {
+        return ResponseEntity.ok(bookingService.cancelBooking(loggedUser, id));
     }
 
     @DeleteMapping("/{id}")

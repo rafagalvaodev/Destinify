@@ -1,5 +1,6 @@
 package com.maisprati.destinify.backend.domain.dto.RoomDTO;
 
+import com.maisprati.destinify.backend.domain.enums.RoomStatus;
 import com.maisprati.destinify.backend.domain.enums.RoomType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -16,5 +17,6 @@ public record RoomCreate(
         @NotNull(message = "O preço deve ser preenchido")
         @Positive(message = "O valor deve ser positivo")
         Float price,
-        String imgUrl){
+        String imgUrl,
+        RoomStatus roomStatus){
 }

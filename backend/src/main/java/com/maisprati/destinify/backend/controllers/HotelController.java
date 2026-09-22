@@ -1,5 +1,6 @@
 package com.maisprati.destinify.backend.controllers;
 
+import com.maisprati.destinify.backend.domain.Hotel;
 import com.maisprati.destinify.backend.domain.dto.HotelDTO.HotelCreate;
 import com.maisprati.destinify.backend.domain.dto.HotelDTO.HotelResponse;
 import com.maisprati.destinify.backend.domain.dto.HotelDTO.HotelUpdate;
@@ -14,6 +15,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/hotels")
@@ -31,31 +34,46 @@ public class HotelController {
 
     // Ver detelhes do hotel
     @GetMapping("/{id}")
-    public ResponseEntity<HotelResponse> findById(@PathVariable Long id) {
+    public ResponseEntity<HotelResponse> findById(
+            @PathVariable Long id) {
         return ResponseEntity.ok(hotelService.findById(id));
     }
 
     // Create -> Criar
     @PostMapping
-    public ResponseEntity<HotelResponse> create(@Valid @RequestBody HotelCreate hotelCreate) {
+    public ResponseEntity<HotelResponse> create(
+            @Valid @RequestBody HotelCreate hotelCreate) {
         HotelResponse response = hotelService.create(hotelCreate);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     // Update -> Atualizar
     @PutMapping("/{id}")
-    public ResponseEntity<HotelResponse> update(@PathVariable Long id, @Valid @RequestBody HotelUpdate hotelUpdate) {
+    public ResponseEntity<HotelResponse> update(
+            @PathVariable Long id,
+            @Valid @RequestBody HotelUpdate hotelUpdate) {
         return ResponseEntity.ok(hotelService.update(id, hotelUpdate));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(
+            @PathVariable Long id) {
         hotelService.delete(id);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{id}/rooms")
-    public ResponseEntity<Page<RoomResponse>> findRoomsByHotelId(@PathVariable Long id, Pageable pageable) {
+    public ResponseEntity<Page<RoomResponse>> findRoomsByHotelId(
+            @PathVariable Long id,
+            Pageable pageable) {
         return ResponseEntity.ok(hotelService.findRoomsByHotelId(id, pageable));
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<Page<HotelResponse>> findHotelByName(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String city,
+            Pageable pageable) {
+        return ResponseEntity.ok(hotelService.findByNameAndOrCity(name, city, pageable));
     }
 }

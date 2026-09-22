@@ -25,29 +25,31 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     Page<Booking> findByUserId(@Param("userId") Long userId, Pageable pageable);
 
     @Query("""
-        SELECT b
-        FROM Booking b
-        WHERE b.room.room_id = :roomId
-        AND b.status <> :cancelledStatus
-        AND b.checkInDate < :checkOutDate
-        AND b.checkOutDate > :checkInDate
-""")
+            SELECT DISTINCT b
+            FROM Booking b
+            JOIN b.rooms r
+            WHERE r.room_id = :roomId
+            AND b.status <> :cancelledStatus
+            AND b.checkInDate < :checkOutDate
+            AND b.checkOutDate > :checkInDate
+        """)
     List<Booking> findOverlappingBookings(
-            @Param("roomId") Long roomID,
+            @Param("roomId") Long roomId,
             @Param("checkInDate") LocalDate checkInDate,
             @Param("checkOutDate") LocalDate checkOutDate,
             @Param("cancelledStatus") BookingStatus cancelledStatus
     );
 
     @Query("""
-        SELECT b
-        FROM Booking b
-        WHERE b.room.room_id = :roomId
-        AND b.id <> :bookingId
-        AND b.status <> :cancelledStatus
-        AND b.checkInDate < :checkOutDate
-        AND b.checkOutDate > :checkInDate
-    """)
+            SELECT DISTINCT b
+            FROM Booking b
+            JOIN b.rooms r
+            WHERE r.room_id = :roomId
+            AND b.id <> :bookingId
+            AND b.status <> :cancelledStatus
+            AND b.checkInDate < :checkOutDate
+            AND b.checkOutDate > :checkInDate
+        """)
     List<Booking> findOverlappingBookingsExcludingBooking(
             @Param("roomId") Long roomId,
             @Param("checkInDate") LocalDate checkInDate,

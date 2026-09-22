@@ -33,33 +33,76 @@ public class SecurityConfig {
         return httpSecurity
                 .authorizeHttpRequests(
                         request -> {
+                            request.requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**")
+                                    .permitAll();
+
+
                             request.requestMatchers(HttpMethod.POST,
-                                    "/api/auth/login").permitAll()
-                                    .requestMatchers(HttpMethod.POST,
-                                    "/api/users/register").permitAll();
+                                            "/api/auth/login/google/exchange")
+                                    .permitAll();
+
                             request.requestMatchers(HttpMethod.GET,
-                                    "/api/rooms/all").permitAll();
-                            request.requestMatchers(HttpMethod.GET, "/api/rooms/{id}").permitAll();
+                                    "/api/auth/login",
+                                    "/api/auth/login/google/autorizado")
+                                    .permitAll();
+
+                            request.requestMatchers(HttpMethod.POST,
+                                    "/api/auth/login" ,
+                                            "/api/users/register")
+                                    .permitAll();
+                            request.requestMatchers(HttpMethod.GET,
+                                            "/api/rooms/all",
+                                            "/api/rooms/{id}",
+                                            "/api/hotels/{id}/rooms")
+                                    .permitAll();
+
+                            request.requestMatchers(HttpMethod.GET, "/api/users/me").authenticated();
+
                             request.requestMatchers(HttpMethod.GET,
                                     "/api/users/all-users").hasRole("ADMIN");
-                            request.requestMatchers(
-                                    "/api/auth/update-token",
-                                    "/api/users/{id}", // mudar depois
-                                    "/api/users/{id}/password",
-                                    "/api/users/user/{id}").hasRole("CLIENT");
+
+                            /*
+                                Configuração rotas de Users
+                             */
+                            request.requestMatchers(HttpMethod.POST, "/api/auth/update-token").authenticated();
+                            request.requestMatchers(HttpMethod.PATCH, "/api/users/{id}").authenticated();
+                            request.requestMatchers(HttpMethod.DELETE, "/api/users/{id}").authenticated();
+                            request.requestMatchers(HttpMethod.GET, "/api/users/{id}").authenticated();
+                            request.requestMatchers(HttpMethod.PATCH, "/api/users/{id}/password").authenticated();
+
 
                             // Listar/ ver hotel: público
-                            request.requestMatchers(HttpMethod.GET, "/api/hotels", "/api/hotels/**").permitAll();
+                            request.requestMatchers(HttpMethod.GET,
+                                    "/api/hotels/search").permitAll();
+                            request.requestMatchers(HttpMethod.GET, "/api/hotels", "/api/hotels/{id}")
+                                    .permitAll();
 
                             // Criar, editar, excluir hotel: ADMIN
-                            request.requestMatchers(HttpMethod.POST, "/api/hotels", "/api/hotels/**").hasRole("ADMIN");
-                            request.requestMatchers(HttpMethod.PUT, "/api/hotels", "/api/hotels/**").hasRole("ADMIN");
-                            request.requestMatchers(HttpMethod.DELETE, "/api/hotels", "/api/hotels/**").hasRole("ADMIN");
+                            request.requestMatchers(HttpMethod.POST,
+                                    "/api/hotels").hasRole("ADMIN");
+                            request.requestMatchers(HttpMethod.PUT,
+                                    "/api/hotels/{id}").hasRole("ADMIN");
+                            request.requestMatchers(HttpMethod.DELETE,
+                                    "/api/hotels/{id}").hasRole("ADMIN");
 
-                            request.requestMatchers(HttpMethod.POST, "/api/rooms/newRoom").hasRole("ADMIN");
-                            request.requestMatchers(HttpMethod.DELETE, "/api/rooms/{id}").hasRole("ADMIN");
-                            request.requestMatchers(HttpMethod.GET, "/api/bookings/user/**").hasRole("ADMIN");
-                            request.requestMatchers(HttpMethod.GET, "/api/bookings/all").hasRole("ADMIN");
+                            /*
+                                Configuração das rotas de room
+                                Post, Delete e Patch apenas admin
+                                Deve ter acesso
+
+                             */
+                            request.requestMatchers(HttpMethod.POST,
+                                    "/api/rooms/newRoom").hasRole("ADMIN");
+                            request.requestMatchers(HttpMethod.DELETE,
+                                    "/api/rooms/{id}").hasRole("ADMIN");
+                            request.requestMatchers(HttpMethod.PATCH,
+                                    "/api/rooms/{id}").hasRole("ADMIN");
+
+                            /*
+                                Configuração rotas Booking
+                             */
+                            request.requestMatchers(HttpMethod.GET,
+                                    "/api/bookings/all").hasRole("ADMIN");
 
                             request.anyRequest().authenticated();
                         })
@@ -87,8 +130,8 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration corsConfiguration = new CorsConfiguration();
 
-        corsConfiguration.setAllowedOrigins(List.of("http://localhost:5173"));
-        corsConfiguration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        corsConfiguration.setAllowedOrigins(List.of("http://localhost:5173", "http://localhost:5174"));
+        corsConfiguration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         corsConfiguration.setAllowedHeaders(List.of("*"));
         corsConfiguration.setAllowCredentials(true);
 
