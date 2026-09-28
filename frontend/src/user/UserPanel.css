@@ -1,0 +1,128 @@
+.account-page {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 230px minmax(0, 1fr);
+  background: #f5f6fa;
+  color: #202033;
+  font-family: 'Arima Madurai', sans-serif;
+}
+
+.account-content {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 42px clamp(24px, 4vw, 64px);
+}
+.account-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+}
+.account-header span {
+  color: #686879;
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.account-header h1 {
+  margin: 3px 0 0;
+  font-size: 30px;
+  line-height: 1.2;
+}
+.user-initial {
+  display: grid;
+  width: 46px;
+  height: 46px;
+  place-items: center;
+  border-radius: 50%;
+  background: #555cd6;
+  color: #fff;
+  font-size: 20px;
+  font-weight: 800;
+}
+.account-panel {
+  padding: 30px;
+  border: 1px solid #e1e2eb;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(35, 32, 106, 0.07);
+}
+.account-state {
+  padding: 40px;
+  border: 1px solid #e1e2eb;
+  border-radius: 8px;
+  background: #fff;
+  text-align: center;
+}
+.section-heading {
+  margin-bottom: 24px;
+}
+.section-heading h2 {
+  margin: 0 0 5px;
+  font-size: 20px;
+}
+.section-heading p {
+  margin: 0;
+  color: #686879;
+}
+.primary-button,
+.secondary-button,
+.danger-button {
+  min-height: 42px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 5px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.primary-button {
+  background: #555cd6;
+  color: #fff;
+}
+.primary-button:hover {
+  background: #4147bb;
+}
+.secondary-button {
+  background: #ececf2;
+  color: #303044;
+}
+.danger-button {
+  background: #b42336;
+  color: #fff;
+}
+button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+.feedback {
+  margin-bottom: 22px;
+  padding: 12px 14px;
+  border-radius: 5px;
+  font-weight: 600;
+}
+.success-message {
+  background: #e7f5ed;
+  color: #17633a;
+}
+.error-message {
+  background: #fdecef;
+  color: #9c2033;
+}
+
+@media (max-width: 780px) {
+  .account-page {
+    grid-template-columns: 1fr;
+  }
+  .account-content {
+    padding: 28px 18px;
+  }
+}
+@media (max-width: 520px) {
+  .account-header h1 {
+    font-size: 25px;
+  }
+  .account-panel {
+    padding: 22px 18px;
+  }
+}

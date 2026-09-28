@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Login from './Login';
 import Register from './Register';
-import Dashboard from './dashboard/Dashboard';
+import UserPanel from './user/UserPanel';
 import Admin from './admin/Admin';
 
 function App() {
@@ -55,7 +55,7 @@ function App() {
         if (adminResponse.status === 403) {
           const userResponse = await fetch('http://localhost:8080/api/users/me', { headers });
           if (userResponse.ok) {
-            if (active) setPaginaAtual('dashboard');
+            if (active) setPaginaAtual('userPanel');
             return;
           }
         }
@@ -78,7 +78,7 @@ function App() {
   }, [paginaAtual]);
 
   React.useEffect(() => {
-    if (paginaAtual !== 'dashboard') return;
+    if (paginaAtual !== 'userPanel') return;
     let active = true;
     fetch('http://localhost:8080/api/users/all-users', {
       headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` },
@@ -99,8 +99,8 @@ function App() {
         <Register setPaginaAtual={setPaginaAtual} />
       )}
 
-      {paginaAtual === 'dashboard' && (
-        <Dashboard setPaginaAtual={setPaginaAtual} />
+      {paginaAtual === 'userPanel' && (
+        <UserPanel setPaginaAtual={setPaginaAtual} />
       )}
       {paginaAtual === 'admin' && <Admin setPaginaAtual={setPaginaAtual} />}
     </div>

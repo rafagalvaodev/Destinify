@@ -1,7 +1,6 @@
 package com.maisprati.destinify.backend.servicies;
 
 import com.maisprati.destinify.backend.domain.dto.LoginDTO.TokenResponseDTO;
-import jakarta.persistence.ManyToOne;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
