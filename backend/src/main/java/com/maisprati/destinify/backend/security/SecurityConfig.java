@@ -64,7 +64,7 @@ public class SecurityConfig {
                             /*
                                 Configuração rotas de Users
                              */
-                            request.requestMatchers(HttpMethod.POST, "/api/auth/update-token").authenticated();
+                            request.requestMatchers(HttpMethod.POST, "/api/auth/update-token").permitAll();
                             request.requestMatchers(HttpMethod.PATCH, "/api/users/{id}").authenticated();
                             request.requestMatchers(HttpMethod.DELETE, "/api/users/{id}").authenticated();
                             request.requestMatchers(HttpMethod.GET, "/api/users/{id}").authenticated();

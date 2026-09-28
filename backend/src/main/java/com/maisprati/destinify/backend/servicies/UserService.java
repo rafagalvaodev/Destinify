@@ -75,6 +75,7 @@ public class UserService implements UserDetailsService {
 
        user.setName(updateUser.name());
        user.setEmail(updateUser.email());
+       user.setBirthdate(updateUser.birthDate());
 
        User updatedUser = userRepository.save(user);
        return userMapper.userResponseMapper(updatedUser);
