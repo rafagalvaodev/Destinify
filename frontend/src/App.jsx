@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import Login from './Login';
-import Register from './Register';
+import './css/main.css';
+import Login from './pages/Login/Login';
+import Register from './pages/Register/Register';
 import UserPanel from './user/UserPanel';
 import Admin from './admin/Admin';
 

@@ -1,0 +1,88 @@
+@import url('https://fonts.googleapis.com/css2?family=Arima:wght@400;500;700&display=swap');
+
+/* Header Upper Bar */
+
+.header {
+    background-color: #211C84;
+    color: #FFFFFF;
+    font-family: 'Arima Madurai', cursive;
+    font-weight: 500;
+}
+
+.header__upper {
+    display: flex;
+    justify-content: space-between;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px 20px 125px 20px; /* Topo, Direita, Baixo, Esquerda */
+}
+
+.header__navigator {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    align-items: center;
+}
+
+.header__brand {
+    font-size: 36px;
+}
+
+.header__link {
+    align-self: center;
+    font-weight: bold;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+.header__link a {
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+}
+
+.header__flag {
+    width: 18px;
+}
+
+/* Header Title */
+
+.header__title {
+    max-width: 1200px;
+    margin: 0 auto 126px auto;
+    padding: 0 20px;
+
+    display: flex;
+    flex-direction: column;
+
+    line-height: 50px;
+}
+
+.header__title h1 {
+    font-size: 40px;
+}
+
+.header__title h2 {
+    font-size: 32px
+}
+
+/* Main */
+
+.main {
+    margin: 0 auto;
+    margin-top: 140px;
+
+    max-width: 1160px;
+}
+
+.card__layout {
+    display: flex;
+    justify-content: space-between;
+}
+
+.main__subtitle {
+    font-size: 1.5em;
+    color: #4D55CC;
+    font-weight: 400;
+    margin-bottom: 25px;
+    font-family: Arial, Helvetica, sans-serif;
+}
