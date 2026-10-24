@@ -1,4 +1,4 @@
-package com.maisprati.destinify.backend.utils;
+package com.maisprati.destinify.backend.utils.mappers;
 
 import com.maisprati.destinify.backend.domain.Room;
 import com.maisprati.destinify.backend.domain.dto.RoomDTO.RoomCreate;
@@ -17,6 +17,7 @@ public class RoomMapper {
         roomCreate.setRoomType(roomCreateDTO.roomType());
         roomCreate.setPrice(roomCreateDTO.price());
         roomCreate.setImgUrl(roomCreateDTO.imgUrl());
+        roomCreate.setRoomStatus(roomCreateDTO.roomStatus());
 
         roomCreate.setHotel(roomCreate.getHotel());
 
@@ -32,7 +33,8 @@ public class RoomMapper {
                 room.getRoomType(),
                 room.getPrice(),
                 room.getRoomType().getMaxCapacity(),
-                room.getImgUrl());
+                room.getImgUrl(),
+                room.getRoomStatus());
     }
 
 

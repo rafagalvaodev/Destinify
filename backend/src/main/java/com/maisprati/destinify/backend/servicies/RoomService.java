@@ -4,10 +4,11 @@ import com.maisprati.destinify.backend.domain.Room;
 import com.maisprati.destinify.backend.domain.dto.RoomDTO.RoomCreate;
 import com.maisprati.destinify.backend.domain.dto.RoomDTO.RoomResponse;
 import com.maisprati.destinify.backend.domain.dto.RoomDTO.RoomUpdate;
+import com.maisprati.destinify.backend.domain.enums.RoomStatus;
 import com.maisprati.destinify.backend.exceptions.RoomNotFoundException;
 import com.maisprati.destinify.backend.repositories.HotelRepository;
 import com.maisprati.destinify.backend.repositories.RoomRepository;
-import com.maisprati.destinify.backend.utils.RoomMapper;
+import com.maisprati.destinify.backend.utils.mappers.RoomMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -34,7 +35,7 @@ public class RoomService {
         Room room = roomMapper.roomCreateMapper(roomCreate);
 
         room.setHotel(hotelRepository.getReferenceById(roomCreate.hotelId()));
-
+        room.setRoomStatus(RoomStatus.AVALIABLE);
         Room saveRoom = roomRepository.save(room);
         return roomMapper.roomResponseMapper(saveRoom);
     }
@@ -70,6 +71,10 @@ public class RoomService {
 
         if(roomUpdate.description() != null){
             room.setDescription(roomUpdate.description());
+        }
+
+        if(roomUpdate.roomStatus() != null) {
+            room.setRoomStatus(roomUpdate.roomStatus());
         }
 
         if(roomUpdate.roomType() != null) {

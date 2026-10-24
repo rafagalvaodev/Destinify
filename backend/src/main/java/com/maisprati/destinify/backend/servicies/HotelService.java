@@ -7,9 +7,9 @@ import com.maisprati.destinify.backend.domain.dto.RoomDTO.RoomResponse;
 import com.maisprati.destinify.backend.exceptions.HotelNotFoundException;
 import com.maisprati.destinify.backend.repositories.HotelRepository;
 import com.maisprati.destinify.backend.repositories.RoomRepository;
-import com.maisprati.destinify.backend.utils.HotelMapper;
+import com.maisprati.destinify.backend.utils.mappers.HotelMapper;
 import com.maisprati.destinify.backend.domain.dto.HotelDTO.HotelResponse;
-import com.maisprati.destinify.backend.utils.RoomMapper;
+import com.maisprati.destinify.backend.utils.mappers.RoomMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -87,5 +87,12 @@ public class HotelService {
         return roomRepository.findRoomsByHotelId(hotelId, pageable).map(roomMapper::roomResponseMapper);
     }
 
+    @Transactional(readOnly = true)
+    public Page<HotelResponse> findByNameAndOrCity(String name, String city, Pageable pageable){
+        String nameFilter = name == null || name.isBlank() ? null : name.trim();
+        String cityFilter = city == null || city.isBlank() ? null : city.trim();
+        return hotelRepository.searchIgnoringAccents(nameFilter, cityFilter, pageable)
+                .map(hotelMapper::hotelResponseMapper);
+    }
 }
 

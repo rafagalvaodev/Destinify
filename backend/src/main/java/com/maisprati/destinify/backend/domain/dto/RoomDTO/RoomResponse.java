@@ -1,5 +1,6 @@
 package com.maisprati.destinify.backend.domain.dto.RoomDTO;
 
+import com.maisprati.destinify.backend.domain.enums.RoomStatus;
 import com.maisprati.destinify.backend.domain.enums.RoomType;
 
 public record RoomResponse(
@@ -10,5 +11,6 @@ public record RoomResponse(
         RoomType roomType,
         Float price,
         int maxCapacity,
-        String imgUrl) {
+        String imgUrl,
+        RoomStatus roomStatus) {
 }

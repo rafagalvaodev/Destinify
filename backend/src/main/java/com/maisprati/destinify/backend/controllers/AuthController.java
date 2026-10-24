@@ -4,14 +4,17 @@ import com.maisprati.destinify.backend.domain.User;
 import com.maisprati.destinify.backend.domain.dto.LoginDTO.LoginData;
 import com.maisprati.destinify.backend.domain.dto.LoginDTO.RefreshToken;
 import com.maisprati.destinify.backend.domain.dto.LoginDTO.TokenResponseDTO;
+import com.maisprati.destinify.backend.exceptions.ForbiddenException;
 import com.maisprati.destinify.backend.repositories.UserRepository;
 import com.maisprati.destinify.backend.servicies.TokenService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,19 +34,25 @@ public class AuthController {
     private UserRepository userRepository;
 
     @PostMapping("/login")
-    public ResponseEntity<TokenResponseDTO> login(@Valid @RequestBody LoginData userData) throws Exception {
+    public ResponseEntity<TokenResponseDTO> login(@Valid @RequestBody LoginData userData) {
+
         UsernamePasswordAuthenticationToken authenticationToken =
                 new UsernamePasswordAuthenticationToken(
-                userData.email(),
-                userData.password());
+                        userData.email(),
+                        userData.password());
 
-        Authentication authentication = authenticationManager.authenticate(authenticationToken);
+        try {
+            Authentication authentication = authenticationManager.authenticate(authenticationToken);
 
-        User user = (User) authentication.getPrincipal();
-        String accessToken = tokenService.generatToken(user);
-        String refreshToken = tokenService.generatRefreshToken(user);
+            User user = (User) authentication.getPrincipal();
+            String accessToken = tokenService.generatToken(user);
+            String refreshToken = tokenService.generatRefreshToken(user);
 
-        return ResponseEntity.ok(new TokenResponseDTO(accessToken, refreshToken));
+            return ResponseEntity.ok(new TokenResponseDTO(accessToken, refreshToken));
+
+        }catch (AuthenticationException e) {
+            throw new ForbiddenException("Email or password are wrong");
+        }
     }
 
     @PostMapping("/update-token")

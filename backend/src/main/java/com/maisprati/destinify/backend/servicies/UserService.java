@@ -8,7 +8,7 @@ import com.maisprati.destinify.backend.domain.dto.UserDTO.UserResponse;
 import com.maisprati.destinify.backend.domain.enums.Role;
 import com.maisprati.destinify.backend.exceptions.UserNotFoundException;
 import com.maisprati.destinify.backend.repositories.UserRepository;
-import com.maisprati.destinify.backend.utils.UserMapper;
+import com.maisprati.destinify.backend.utils.mappers.UserMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -61,7 +61,6 @@ public class UserService implements UserDetailsService {
     @Transactional(readOnly = true)
     public List<UserResponse> getAllUsers(){
 
-
         return userRepository.findAll()
                 .stream()
                 .map(userMapper::userResponseMapper)
@@ -76,6 +75,7 @@ public class UserService implements UserDetailsService {
 
        user.setName(updateUser.name());
        user.setEmail(updateUser.email());
+       user.setBirthdate(updateUser.birthDate());
 
        User updatedUser = userRepository.save(user);
        return userMapper.userResponseMapper(updatedUser);
@@ -109,5 +109,14 @@ public class UserService implements UserDetailsService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id));
         return userMapper.userResponseMapper(user);
+    }
+
+    @Transactional(readOnly = true)
+    public String findUserById(Long id) {
+        User loggedUser = userRepository
+                .findById(id)
+                .orElseThrow(() -> new UserNotFoundException(id));
+
+        return loggedUser.getName().toLowerCase();
     }
 }

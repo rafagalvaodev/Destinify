@@ -4,6 +4,7 @@ CREATE TABLE tb_rooms
     name VARCHAR(120) NOT NULL,
     description VARCHAR(1000),
     room_type VARCHAR(15) NOT NULL,
+    room_status VARCHAR(15) NOT NULL,
     price FLOAT NOT NULL,
     img_url VARCHAR(255),
     hotel_id BIGINT NOT NULL,

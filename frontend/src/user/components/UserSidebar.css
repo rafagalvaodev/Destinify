@@ -1,0 +1,101 @@
+.account-sidebar {
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column;
+  padding: 30px 18px 22px;
+  background: #23206a;
+  color: #fff;
+}
+.account-brand {
+  padding: 0 12px 28px;
+  font-size: 22px;
+  font-weight: 800;
+}
+.account-sidebar nav {
+  display: grid;
+  gap: 6px;
+}
+.account-sidebar button {
+  border: 0;
+  font: inherit;
+  cursor: pointer;
+}
+.account-sidebar nav button,
+.logout-button {
+  width: 100%;
+  padding: 12px;
+  border-radius: 6px;
+  background: transparent;
+  color: #d9d9ee;
+  text-align: left;
+  font-weight: 600;
+}
+.account-sidebar nav button:hover,
+.account-sidebar nav button.active {
+  background: #fff;
+  color: #23206a;
+}
+.logout-button {
+  margin-top: auto;
+}
+.logout-button:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+@media (max-width: 780px) {
+  .account-sidebar {
+    display: grid;
+    min-height: auto;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px 12px;
+    padding: 12px 14px;
+  }
+
+  .account-brand {
+    grid-column: 1;
+    grid-row: 1;
+    padding: 0;
+    font-size: 18px;
+  }
+
+  .account-sidebar nav {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 5px;
+  }
+
+  .account-sidebar nav button {
+    min-width: 0;
+    min-height: 40px;
+    padding: 7px 5px;
+    font-size: 12px;
+    line-height: 1.15;
+    text-align: center;
+  }
+
+  .account-sidebar .logout-button {
+    width: auto;
+    min-height: 32px;
+    grid-column: 2;
+    grid-row: 1;
+    margin: 0;
+    padding: 5px 9px;
+    font-size: 12px;
+    text-align: center;
+  }
+}
+
+@media (max-width: 390px) {
+  .account-sidebar {
+    padding-inline: 10px;
+  }
+
+  .account-sidebar nav button {
+    min-height: 38px;
+    padding-inline: 3px;
+    font-size: 11px;
+  }
+}

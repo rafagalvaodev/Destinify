@@ -1,4 +1,4 @@
-package com.maisprati.destinify.backend.utils;
+package com.maisprati.destinify.backend.utils.mappers;
 
 import com.maisprati.destinify.backend.domain.Hotel;
 import com.maisprati.destinify.backend.domain.dto.HotelDTO.HotelCreate;
