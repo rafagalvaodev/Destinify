@@ -1,4 +1,5 @@
 import './BookingsView.css';
+import AccountIcon from './AccountIcon';
 import { bookingStatusLabel, formatCurrency, formatDate } from '../api/userApi';
 
 function BookingCard({ booking, active, saving, onDetails, onEdit, onPay, onCancel }) {
@@ -9,17 +10,20 @@ function BookingCard({ booking, active, saving, onDetails, onEdit, onPay, onCanc
   return (
     <article className="booking-card">
       <div className="booking-card-heading">
-        <div><small>Reserva #{booking.id}</small><h3>{booking.hotelName}</h3></div>
-        <span className={`booking-status status-${booking.status.toLowerCase()}`}>{bookingStatusLabel[booking.status] || booking.status}</span>
+        <div className="booking-hotel"><span className="booking-hotel-icon"><AccountIcon name="stay" /></span><div><small>Reserva #{booking.id}</small><h3>{booking.hotelName || 'Sua hospedagem'}</h3></div></div>
+        <span className={`booking-status status-${String(booking.status || '').toLowerCase()}`}>{bookingStatusLabel[booking.status] || booking.status}</span>
       </div>
-      <div className="booking-details">
-        <div><small>Entrada</small><strong>{formatDate(booking.checkInDate)}</strong></div>
-        <div><small>Saída</small><strong>{formatDate(booking.checkOutDate)}</strong></div>
-        <div><small>Hóspedes</small><strong>{booking.guestsCount}</strong></div>
-        <div><small>Valor total</small><strong>{formatCurrency(booking.totalPrice)}</strong></div>
+      <div className="booking-stay">
+        <div className="booking-details">
+          <div><small>CHECK-IN</small><strong>{formatDate(booking.checkInDate)}</strong></div>
+          <span className="booking-date-arrow" aria-hidden="true">→</span>
+          <div><small>CHECK-OUT</small><strong>{formatDate(booking.checkOutDate)}</strong></div>
+        </div>
+        <p className="booking-room-info">{rooms}</p>
+        <p className="booking-guests">{booking.guestsCount} {Number(booking.guestsCount) === 1 ? 'hóspede' : 'hóspedes'}</p>
       </div>
+      <div className="booking-price"><span>Total da estadia</span><strong>{formatCurrency(booking.totalPrice)}</strong></div>
       <div className="booking-footer">
-        <span>{rooms}</span>
         <div className="booking-actions">
           <button type="button" onClick={() => onDetails(booking)}>Detalhes</button>
           {active && booking.status === 'PENDING' && (
@@ -49,6 +53,7 @@ export default function BookingsView({ section, bookings, loading, saving, page,
         <div className="booking-empty">Carregando reservas...</div>
       ) : bookings.length === 0 ? (
         <div className="booking-empty">
+          <span className="booking-empty-icon"><AccountIcon name="stay" /></span>
           <strong>{active ? 'Nenhuma reserva ativa' : 'Seu histórico está vazio'}</strong>
           <span>{active ? 'Suas próximas hospedagens aparecerão aqui.' : 'Reservas concluídas ou canceladas aparecerão aqui.'}</span>
         </div>
