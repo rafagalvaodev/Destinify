@@ -23,8 +23,8 @@ O pagamento é um fluxo demonstrativo interno, sem integração com gateway.
 | Desenvolvimento | Maven Wrapper, npm, Docker Compose para o banco, Oxlint e Prettier |
 | Validação | JUnit, testes de integração PostgreSQL, Node Test Runner e Postman/Newman |
 
-As versões declaradas estão em [backend/pom.xml](backend/pom.xml) e
-[frontend/package.json](frontend/package.json); o lockfile fixa as dependências do frontend.
+As versões declaradas estão em [backend/pom.xml](https://github.com/rafagalvaodev/Destinify/blob/develop/backend/pom.xml) e
+[frontend/package.json](https://github.com/rafagalvaodev/Destinify/blob/develop/frontend/package.json); o lockfile fixa as dependências do frontend.
 
 ## Estrutura do repositório
 
@@ -182,7 +182,7 @@ fazem parte deste README ou das variáveis preenchidas da collection.
 | `PATCH` | `/api/bookings/{id}/cancel` | Cancelar reserva própria dentro do prazo |
 
 A lista completa, inclusive CRUD administrativo, Google OAuth e casos de erro,
-está no Swagger e na [collection Postman](docs/Collections/Destinify.postman_collection.json).
+está no Swagger e na [collection Postman](https://github.com/rafagalvaodev/Destinify/blob/develop/docs/Collections/Destinify.postman_collection.json).
 
 ### Postman
 
@@ -202,7 +202,7 @@ OAuth, administração e exclusões avulsas não fizeram parte dessa execução.
 
 ### UML
 
-O [diagrama de classes](docs/UMLs/UML_DESTINIFY.svg) está disponível em SVG na pasta
+O [diagrama de classes](https://github.com/rafagalvaodev/Destinify/blob/develop/docs/UMLs/Diagrama%20de%20classes_Destinify.svg) está disponível em SVG na pasta
 `docs/UMLs/`.
 
 ## Testes e build
@@ -239,11 +239,7 @@ npm run lint
 npm run build
 ```
 
-O build gera `frontend/dist/`. Os testes cobrem busca, capacidade, promoções, preços,
-persistência dos descontos, pagamento pendente e armazenamento do rascunho.
-
 ## Contribuição e licença
 
 Para contribuir, crie uma branch, implemente a alteração com validação correspondente
 e abra um pull request descrevendo o comportamento e os testes realizados.
-O projeto ainda não possui arquivo de licença definido.
