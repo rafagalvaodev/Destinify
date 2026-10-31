@@ -10,7 +10,7 @@ function BookingCard({ booking, active, saving, onDetails, onEdit, onPay, onCanc
   return (
     <article className="booking-card">
       <div className="booking-card-heading">
-        <div className="booking-hotel"><span className="booking-hotel-icon"><AccountIcon name="stay" /></span><div><small>Reserva #{booking.id}</small><h3>{booking.hotelName || 'Sua hospedagem'}</h3></div></div>
+        <div className="booking-hotel"><span className="booking-hotel-icon"><AccountIcon name="stay" /></span><div><h3>{booking.hotelName || 'Sua hospedagem'}</h3></div></div>
         <span className={`booking-status status-${String(booking.status || '').toLowerCase()}`}>{bookingStatusLabel[booking.status] || booking.status}</span>
       </div>
       <div className="booking-stay">

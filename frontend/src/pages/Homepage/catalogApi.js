@@ -2,11 +2,14 @@ const configured = import.meta.env?.VITE_API_URL || 'http://localhost:8080/api';
 const base = configured.replace(/\/+$/, '');
 const apiBase = base.endsWith('/api') ? base : `${base}/api`;
 
-export function hotelsPath({ name = '', city = '', page = 0 } = {}) {
+export function hotelsPath({ name = '', city = '', page = 0, guests, rooms, startDate, endDate } = {}) {
   const params = new URLSearchParams({ page: String(page), size: '12' });
   if (name.trim()) params.set('name', name.trim());
   if (city.trim()) params.set('city', city.trim());
-  return `/hotels${name.trim() || city.trim() ? '/search' : ''}?${params}`;
+  for (const [key, value] of Object.entries({ guests, rooms, startDate, endDate })) {
+    if (value !== undefined && value !== '') params.set(key, String(value));
+  }
+  return `/hotels${name.trim() || city.trim() || guests != null || rooms != null || startDate || endDate ? '/search' : ''}?${params}`;
 }
 
 export async function getCatalog(path, signal) {

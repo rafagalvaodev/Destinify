@@ -4,21 +4,21 @@ import brazilFlag from '../../imagem/flag_brazil.png';
 import defaultHotelImage from '../../imagem/imagem_teste.png';
 import { getCatalog } from './catalogApi';
 import RoomBooking from './RoomBooking';
+import { clearBookingDraft } from './bookingDraft';
 
 const types = { SINGLE: 'Individual', SUITE: 'Suíte', TRIPLE: 'Triplo' };
 const statuses = { AVALIABLE: 'Disponível', AVAILABLE: 'Disponível', OCCUPIED: 'Ocupado', MAINTENANCE: 'Em manutenção' };
 const currency = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 
-export default function HotelRooms({ hotel, onClose, setPaginaAtual }) {
+export default function HotelRooms({ hotel, onClose, setPaginaAtual, searchCriteria = {}, initialDraft, onBookingCreated }) {
   const loggedIn = Boolean(localStorage.getItem('accessToken'));
   const [page, setPage] = useState(0);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [retry, setRetry] = useState(0);
-  const [selectedRooms, setSelectedRooms] = useState([]);
+  const [selectedRooms, setSelectedRooms] = useState(initialDraft?.rooms || hotel.suggestedRooms || []);
   const [bookingSaving, setBookingSaving] = useState(false);
-  const [createdBooking, setCreatedBooking] = useState(null);
 
   useLayoutEffect(() => {
     const scrollPosition = window.scrollY;
@@ -45,10 +45,11 @@ export default function HotelRooms({ hotel, onClose, setPaginaAtual }) {
 
   function toggleRoom(room) {
     if (bookingSaving) return;
-    setCreatedBooking(null);
-    setSelectedRooms((current) => current.some((item) => item.room_id === room.room_id)
-      ? current.filter((item) => item.room_id !== room.room_id)
-      : [...current, room]);
+    const next = selectedRooms.some((item) => item.room_id === room.room_id)
+      ? selectedRooms.filter((item) => item.room_id !== room.room_id)
+      : [...selectedRooms, room];
+    if (!next.length) clearBookingDraft();
+    setSelectedRooms(next);
   }
 
   function changePage(value) { setLoading(true); setPage(value); }
@@ -80,6 +81,7 @@ export default function HotelRooms({ hotel, onClose, setPaginaAtual }) {
       <main className="main">
       {hotel.description && <p className="hotel-page__description">{hotel.description}</p>}
       <h2 className="main__subtitle">Escolha seu quarto</h2>
+      {hotel.suggestedRooms?.length > 0 && <p role="status">Sugerimos {hotel.suggestedRooms.length} quarto(s) para {searchCriteria.guests} hóspede(s). Você pode ajustar a seleção abaixo.</p>}
       <p className="catalog-note">Selecione um ou mais quartos para reservar juntos. Valores por noite. O status do quarto não confirma disponibilidade para um período específico.</p>
       {loading && <p role="status">Carregando quartos…</p>}
       {error && <div role="alert"><p>{error}</p><button type="button" onClick={() => setRetry((value) => value + 1)}>Tentar novamente</button></div>}
@@ -106,13 +108,9 @@ export default function HotelRooms({ hotel, onClose, setPaginaAtual }) {
         <span>Página {data.page + 1} de {data.totalPages}</span>
         <button type="button" disabled={loading || page >= data.totalPages - 1} onClick={() => changePage(page + 1)}>Próxima</button>
       </nav>}
-      {createdBooking && <div className="hotel-page__booking-success" role="status">
-        <p>Reserva #{createdBooking.id} criada! Acompanhe os detalhes e o pagamento em Minhas reservas.</p>
-        <button className="catalog-button" type="button" onClick={() => setPaginaAtual('userPanel')}>Minhas reservas</button>
-      </div>}
-      {selectedRooms.length > 0 && <RoomBooking hotel={hotel} rooms={selectedRooms} onRemove={toggleRoom}
+      {selectedRooms.length > 0 && <RoomBooking initialDraft={initialDraft} searchCriteria={searchCriteria} hotel={hotel} rooms={selectedRooms} onRemove={toggleRoom}
         onBusyChange={setBookingSaving} setPaginaAtual={setPaginaAtual}
-        onCreated={(booking) => { setCreatedBooking(booking); setSelectedRooms([]); }} />}
+        onCreated={onBookingCreated} />}
       </main>
       <Footer />
 

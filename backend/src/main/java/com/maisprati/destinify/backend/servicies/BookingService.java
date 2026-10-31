@@ -23,7 +23,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,156 +40,51 @@ public class BookingService {
 
     @Autowired
     private PaymentService paymentService;
-//
-//    @Transactional
-//    public BookingResponse newBooking(BookingCreate bookingCreate, User loggedUser) {
-//
-//        // Regra 1: check-out tem que ser depois do check-in (senão a estadia teria 0 ou -N noites)
-//        if (!bookingCreate.checkOutDate().isAfter(bookingCreate.checkInDate())) {
-//            throw new BookingConflictException("A data de check-out deve ser posterior à data de check-in");
-//        }
-//
-//        List<Long> roomIds = bookingCreate
-//                .roomIds()
-//                .stream()
-//                .distinct()
-//                .sorted()
-//                .toList();
-//
-//        List<Room> rooms = new ArrayList<>();
-//
-//        for (Long roomId : roomIds) {
-//            Room room = roomRepository
-//                    .findByIdForUpdate(roomId)
-//                    .orElseThrow(() -> new RoomNotFoundException(roomId));
-//
-//            // Regra 2: o quarto tem que pertencer mesmo ao hotel informado.
-//            if (!room.getHotel().getHotel_id().equals(bookingCreate.hotelId())) {
-//                throw new BookingConflictException("Todos os quartos devem pertence ao hotel informado");
-//            }
-//
-//            // Regra 4: não pode reservar um quarto que já esta ocupado
-//            // por outra reserva ativa em algum dia dentro do período pedido.
-//            List<Booking> overlaps = bookingRepository.findOverlappingBookings(
-//                    roomId,
-//                    bookingCreate.checkInDate(),
-//                    bookingCreate.checkOutDate(),
-//                    BookingStatus.CANCELLED
-//            );
-//
-//            if (!overlaps.isEmpty()) {
-//                throw new BookingConflictException(String.format("O quarto %d já está reservado para o período selecionado.", roomId));
-//            }
-//
-//            rooms.add(room);
-//
-//        }
-//
-//
-//
-//        // Regra 3: quantidade de hóspedes não pode passar da capacidade do quarto
-//        int maxCapacity = rooms.stream().mapToInt(room ->
-//                room.getRoomType()
-//                        .getMaxCapacity()).sum();
-//
-//        if (bookingCreate.guestsCount() > maxCapacity) {
-//            throw new BookingConflictException(String.format("O quarto selecionado comporta no máximo %d hospede(s)", maxCapacity ));
-//        }
-//
-//
-//
-//
-//        long nights = ChronoUnit.DAYS.between(
-//                bookingCreate.checkInDate(),
-//                bookingCreate.checkOutDate());
-//
-//        float dailyPrice = (float) rooms.stream().mapToDouble(Room::getPrice).sum();
-//
-//        float totalPrice = dailyPrice * nights;
-//
-//        Booking booking = new Booking();
-//        booking.setUser(loggedUser); // vem do tokem (Controller), não do JSON
-//        booking.setHotel(rooms.getFirst().getHotel());
-//        booking.setRooms(rooms);
-//        booking.setCheckInDate(bookingCreate.checkInDate());
-//        booking.setCheckOutDate(bookingCreate.checkOutDate());
-//        booking.setGuestsCount(bookingCreate.guestsCount());
-//        booking.setTotalPrice(totalPrice);
-//        booking.setStatus(BookingStatus.PENDING);
-//
-//        Booking savedBooking = bookingRepository.save(booking);
-//
-//        paymentService.createPayment(savedBooking.getId(), loggedUser);
-//
-//        return bookingMapper.bookingResponseMapper(savedBooking);
-//    }
+    @Autowired
+    private PromotionService promotionService;
+
+    @Transactional(readOnly = true)
+    public com.maisprati.destinify.backend.domain.dto.BookingDTO.BookingSummary summary(BookingCreate request) {
+        var rooms = loadRooms(request, false);
+        return promotionService.calculate(rooms, request.checkInDate(), request.checkOutDate(),
+                request.guestsCount(), request.adultsCount(), request.childrenAges());
+    }
+
+    private List<Room> loadRooms(BookingCreate request, boolean lock) {
+        if (request.checkInDate().isBefore(java.time.LocalDate.now()) || !request.checkOutDate().isAfter(request.checkInDate()))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Informe datas válidas: saída após chegada.");
+        var rooms = new ArrayList<Room>();
+        for (Long id : request.roomIds().stream().distinct().sorted().toList()) {
+            Room room = (lock ? roomRepository.findByIdForUpdate(id) : roomRepository.findById(id))
+                    .orElseThrow(() -> new RoomNotFoundException(id));
+            if (!room.getHotel().getHotel_id().equals(request.hotelId()))
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Os quartos devem pertencer ao mesmo hotel.");
+            if (room.getRoomStatus() != com.maisprati.destinify.backend.domain.enums.RoomStatus.AVALIABLE)
+                throw new BookingConflictException("Quarto indisponível para reserva.");
+            if (!bookingRepository.findOverlappingBookings(id, request.checkInDate(), request.checkOutDate(), BookingStatus.CANCELLED).isEmpty())
+                throw new BookingConflictException("O quarto " + id + " já está reservado para o período selecionado.");
+            rooms.add(room);
+        }
+        return rooms;
+    }
+
+    private void applyPrice(Booking booking, com.maisprati.destinify.backend.domain.dto.BookingDTO.BookingSummary price) {
+        booking.setAdultsCount(price.adultsCount());
+        booking.setChildrenAges(price.childrenAges());
+        booking.setBasePrice(price.basePrice());
+        booking.setDiscountTotal(price.discountTotal());
+        booking.setTotalPrice(price.totalPrice());
+        booking.setPromotions(price.promotions());
+    }
 
     @Transactional
     public BookingResponse newBooking(
             BookingCreate bookingCreate,
             User loggedUser) {
 
-        if (!bookingCreate.checkOutDate()
-                .isAfter(bookingCreate.checkInDate())) {
-            throw new BookingConflictException(
-                    "A data de check-out deve ser posterior à data de check-in");
-        }
-
-        List<Long> roomIds = bookingCreate.roomIds()
-                .stream()
-                .distinct()
-                .sorted()
-                .toList();
-
-        List<Room> rooms = new ArrayList<>();
-
-        for (Long roomId : roomIds) {
-            Room room = roomRepository.findByIdForUpdate(roomId)
-                    .orElseThrow(() -> new RoomNotFoundException(roomId));
-
-            if (!room.getHotel().getHotel_id()
-                    .equals(bookingCreate.hotelId())) {
-                throw new BookingConflictException(
-                        "Todos os quartos devem pertencer ao hotel informado");
-            }
-
-            List<Booking> overlaps =
-                    bookingRepository.findOverlappingBookings(
-                            roomId,
-                            bookingCreate.checkInDate(),
-                            bookingCreate.checkOutDate(),
-                            BookingStatus.CANCELLED
-                    );
-
-            if (!overlaps.isEmpty()) {
-                throw new BookingConflictException(
-                        "O quarto " + roomId +
-                                " já está reservado para o período selecionado");
-            }
-
-            rooms.add(room);
-        }
-
-        int totalCapacity = rooms.stream()
-                .mapToInt(room ->
-                        room.getRoomType().getMaxCapacity())
-                .sum();
-
-        if (bookingCreate.guestsCount() > totalCapacity) {
-            throw new BookingConflictException(
-                    "Os quartos selecionados comportam no máximo "
-                            + totalCapacity + " hóspede(s)");
-        }
-
-        long nights = ChronoUnit.DAYS.between(
-                bookingCreate.checkInDate(),
-                bookingCreate.checkOutDate());
-
-        float dailyPrice = (float) rooms.stream()
-                .mapToDouble(Room::getPrice)
-                .sum();
-
-        float totalPrice = dailyPrice * nights;
+        List<Room> rooms = loadRooms(bookingCreate, true);
+        var price = promotionService.calculate(rooms, bookingCreate.checkInDate(), bookingCreate.checkOutDate(),
+                bookingCreate.guestsCount(), bookingCreate.adultsCount(), bookingCreate.childrenAges());
 
         Booking booking = new Booking();
         booking.setUser(loggedUser);
@@ -199,7 +93,7 @@ public class BookingService {
         booking.setCheckInDate(bookingCreate.checkInDate());
         booking.setCheckOutDate(bookingCreate.checkOutDate());
         booking.setGuestsCount(bookingCreate.guestsCount());
-        booking.setTotalPrice(totalPrice);
+        applyPrice(booking, price);
         booking.setStatus(BookingStatus.PENDING);
 
         Booking savedBooking = bookingRepository.save(booking);
@@ -298,16 +192,13 @@ public class BookingService {
 
 
 
-        // Recalcula o preço, já que o número de noites pode ter mudado
-        long nights = ChronoUnit.DAYS.between(newCheckIn, newCheckOut);
-
-
-        float dailyPrice = (float) lockedRooms.stream().mapToDouble(Room::getPrice).sum();
-
+        var children = bookingUpdate.childrenAges() == null ? booking.getChildrenAges() : bookingUpdate.childrenAges();
+        int adults = bookingUpdate.adultsCount() != null ? bookingUpdate.adultsCount() : newGuests - children.size();
+        var price = promotionService.calculate(lockedRooms, newCheckIn, newCheckOut, newGuests, adults, children);
         booking.setCheckInDate(newCheckIn);
         booking.setCheckOutDate(newCheckOut);
         booking.setGuestsCount(newGuests);
-        booking.setTotalPrice(dailyPrice * nights);
+        applyPrice(booking, price);
 
         paymentService.updatePendingAmount(booking);
 

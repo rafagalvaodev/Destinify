@@ -3,6 +3,7 @@ package com.maisprati.destinify.backend.domain;
 import com.maisprati.destinify.backend.domain.enums.BookingStatus;
 import jakarta.persistence.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -41,7 +42,33 @@ public class Booking {
     private Integer guestsCount;
 
     @Column(name = "total_price", nullable = false)
-    private Float totalPrice;
+    private BigDecimal totalPrice;
+
+    private BigDecimal basePrice;
+    private BigDecimal discountTotal;
+    private Integer adultsCount;
+
+    @ElementCollection
+    @CollectionTable(name = "tb_booking_children", joinColumns = @JoinColumn(name = "booking_id"))
+    @OrderColumn(name = "child_index")
+    @Column(name = "age")
+    private List<Integer> childrenAges = new ArrayList<>();
+
+    @ElementCollection
+    @CollectionTable(name = "tb_booking_discounts", joinColumns = @JoinColumn(name = "booking_id"))
+    @OrderColumn(name = "discount_index")
+    private List<PromotionDiscount> promotions = new ArrayList<>();
+
+    public BigDecimal getBasePrice() { return basePrice; }
+    public void setBasePrice(BigDecimal value) { basePrice = value; }
+    public BigDecimal getDiscountTotal() { return discountTotal; }
+    public void setDiscountTotal(BigDecimal value) { discountTotal = value; }
+    public Integer getAdultsCount() { return adultsCount; }
+    public void setAdultsCount(Integer value) { adultsCount = value; }
+    public List<Integer> getChildrenAges() { return childrenAges; }
+    public void setChildrenAges(List<Integer> value) { childrenAges = new ArrayList<>(value); }
+    public List<PromotionDiscount> getPromotions() { return promotions; }
+    public void setPromotions(List<PromotionDiscount> value) { promotions = new ArrayList<>(value); }
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -116,11 +143,11 @@ public class Booking {
         this.guestsCount = guestsCount;
     }
 
-    public Float getTotalPrice() {
+    public BigDecimal getTotalPrice() {
         return totalPrice;
     }
 
-    public void setTotalPrice(Float totalPrice) {
+    public void setTotalPrice(BigDecimal totalPrice) {
         this.totalPrice = totalPrice;
     }
 

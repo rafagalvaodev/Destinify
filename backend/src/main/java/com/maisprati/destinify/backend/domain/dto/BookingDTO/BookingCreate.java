@@ -23,6 +23,8 @@ public record BookingCreate(
 
         @NotNull(message = "A quantidade de hóspedes deve ser preenchida")
         @Positive(message = "A quantidade de hóspedes deve ser maior que zero")
-        Integer guestsCount
+        Integer guestsCount,
+        @Min(1) @Max(60) Integer adultsCount,
+        @Size(max = 59) List<@NotNull @Min(0) @Max(17) Integer> childrenAges
 ) {
 }

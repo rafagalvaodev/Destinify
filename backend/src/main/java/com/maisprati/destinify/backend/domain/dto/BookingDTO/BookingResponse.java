@@ -17,9 +17,14 @@ public record BookingResponse(
         LocalDate checkInDate,
         LocalDate checkOutDate,
         Integer guestsCount,
-        Float totalPrice,
+        java.math.BigDecimal totalPrice,
         BookingStatus status,
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+        Integer adultsCount,
+        List<Integer> childrenAges,
+        java.math.BigDecimal basePrice,
+        java.math.BigDecimal discountTotal,
+        List<com.maisprati.destinify.backend.domain.PromotionDiscount> promotions
 
 ) {
 }
