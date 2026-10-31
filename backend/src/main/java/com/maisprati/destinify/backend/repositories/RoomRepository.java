@@ -21,6 +21,18 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
     """)
     Page<Room> findRoomsByHotelId(@Param("hotelId") Long hotelId, Pageable pageable);
 
+    @Query("""
+        SELECT r FROM Room r
+        WHERE r.hotel.hotel_id = :hotelId
+        AND r.roomStatus = com.maisprati.destinify.backend.domain.enums.RoomStatus.AVALIABLE
+        AND NOT EXISTS (SELECT b.id FROM Booking b JOIN b.rooms br
+            WHERE br.room_id = r.room_id
+            AND b.status <> com.maisprati.destinify.backend.domain.enums.BookingStatus.CANCELLED
+            AND b.checkInDate < :endDate AND b.checkOutDate > :startDate)
+        """)
+    java.util.List<Room> findAvailableForSearch(Long hotelId, java.time.LocalDate startDate,
+                                               java.time.LocalDate endDate);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT r FROM Room r WHERE r.room_id = :id")
     Optional<Room> findByIdForUpdate(@Param("id") Long id);

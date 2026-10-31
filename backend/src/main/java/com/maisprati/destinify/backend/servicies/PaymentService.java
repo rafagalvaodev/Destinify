@@ -53,7 +53,7 @@ public class PaymentService {
                 .orElseGet(() -> {
                         Payment payment = new Payment();
                         payment.setBooking(booking);
-                        payment.setAmount(new BigDecimal(booking.getTotalPrice().toString())
+                        payment.setAmount(booking.getTotalPrice()
                                 .setScale(2, RoundingMode.HALF_UP));
                         payment.setPaymentStatus(PaymentStatus.PENDING);
                         payment.setCreatedAt(LocalDateTime.now());
@@ -132,7 +132,7 @@ public class PaymentService {
     public void updatePendingAmount(Booking booking) {
         Payment payment = paymentRepository.findFirstByBookingIdAndPaymentStatusOrderByCreatedAtDesc(booking.getId(), PaymentStatus.PENDING)
                 .orElseThrow(() -> new ResourceNotFoundException("Pending payment not found"));
-        payment.setAmount(BigDecimal.valueOf(booking.getTotalPrice())
+        payment.setAmount(booking.getTotalPrice()
                 .setScale(2, RoundingMode.HALF_UP));
         paymentRepository.save(payment);
     }

@@ -6,21 +6,22 @@ import Footer from '../../components/Footer/Footer';
 import brazilFlag from '../../imagem/flag_brazil.png';
 import HotelRooms from './HotelRooms';
 import { getCatalog, hotelsPath } from './catalogApi';
+import { readBookingDraft, clearBookingDraft } from './bookingDraft';
 
-export default function Homepage({ setPaginaAtual }) {
+export default function Homepage({ setPaginaAtual, onBookingCreated }) {
+  const [draft, setDraft] = useState(readBookingDraft);
   const [name, setName] = useState('');
   const [city, setCity] = useState('');
   const [adults, setAdults] = useState(2);
   const [children, setChildren] = useState(0);
-  const [rooms, setRooms] = useState(1);
   const [arrival, setArrival] = useState('');
   const [departure, setDeparture] = useState('');
-  const [query, setQuery] = useState({ name: '', city: '', page: 0 });
+  const [query, setQuery] = useState(draft?.searchCriteria || { name: '', city: '', page: 0 });
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [retry, setRetry] = useState(0);
-  const [selected, setSelected] = useState(null);
+  const [selected, setSelected] = useState(draft?.hotel || null);
   const scrollOnSuccess = useRef(false);
   const results = useRef(null);
   const loggedIn = Boolean(localStorage.getItem('accessToken'));
@@ -29,6 +30,7 @@ export default function Homepage({ setPaginaAtual }) {
     const controller = new AbortController();
     setLoading(true);
     setError('');
+    setData(null);
     getCatalog(hotelsPath(query), controller.signal)
       .then((result) => { if (!controller.signal.aborted) setData({ ...result, page: query.page }); })
       .catch((err) => { if (!controller.signal.aborted) setError(err.message); })
@@ -47,11 +49,19 @@ export default function Homepage({ setPaginaAtual }) {
     event.preventDefault();
     scrollOnSuccess.current = true;
     setLoading(true);
-    setQuery({ name: name.trim(), city: city.trim(), page: 0 });
+    if (Boolean(arrival) !== Boolean(departure) || (arrival && departure <= arrival)) {
+      setData(null);
+      setError('Informe chegada e saída, com saída posterior à chegada.');
+      setLoading(false);
+      return;
+    }
+    setQuery({ name: name.trim(), city: city.trim(), page: 0,
+      guests: Number(adults) + Number(children), adultsCount: Number(adults), childrenCount: Number(children),
+      startDate: arrival, endDate: departure });
   }
   function clear() {
     setName(''); setCity(''); setLoading(true);
-    setAdults(2); setChildren(0); setRooms(1);
+    setAdults(2); setChildren(0);
     setArrival(''); setDeparture('');
     setQuery({ name: '', city: '', page: 0 });
   }
@@ -66,7 +76,7 @@ export default function Homepage({ setPaginaAtual }) {
   }
 
   if (selected) {
-    return <HotelRooms key={selected.hotel_id} hotel={selected} onClose={() => setSelected(null)} setPaginaAtual={setPaginaAtual} />;
+    return <HotelRooms key={selected.hotel_id} hotel={selected} onClose={() => { clearBookingDraft(); setDraft(null); setSelected(null); }} setPaginaAtual={setPaginaAtual} searchCriteria={query} initialDraft={draft?.hotel.hotel_id === selected.hotel_id ? draft : null} onBookingCreated={onBookingCreated} />;
   }
 
   return (
@@ -88,7 +98,7 @@ export default function Homepage({ setPaginaAtual }) {
           <div className="header__input"><label htmlFor="catalog-city">Escolha seu destino</label>
             <input id="catalog-city" type="text" placeholder="Para onde planeja ir?" value={city} onChange={(event) => setCity(event.target.value)} /></div>
           <div className='header__input'><label htmlFor="arrival-input">Selecione a data</label>
-              <div className='header__date'><input type="date" name="arrival-date" id="arrival-input" aria-label="Data de chegada" value={arrival} onChange={(event) => { setArrival(event.target.value); if (departure && event.target.value > departure) setDeparture(''); }}/>
+              <div className='header__date'><input type="date" name="arrival-date" id="arrival-input" min={new Date().toLocaleDateString('en-CA')} aria-label="Data de chegada" value={arrival} onChange={(event) => { setArrival(event.target.value); if (departure && event.target.value > departure) setDeparture(''); }}/>
                   <span>—</span>
                   <input type="date" name="departure-date" id="departure-input" aria-label="Data de saída" min={arrival || undefined} value={departure} onChange={(event) => setDeparture(event.target.value)}/>
               </div>
@@ -96,11 +106,10 @@ export default function Homepage({ setPaginaAtual }) {
           <div className="header__input header__occupancy">
             <span className="header__field-label" id="occupancy-label">Selecione a ocupação</span>
             <details className="occupancy-picker">
-              <summary aria-describedby="occupancy-label">{adults} {adults === 1 ? 'adulto' : 'adultos'} · {children} {children === 1 ? 'criança' : 'crianças'} · {rooms} {rooms === 1 ? 'quarto' : 'quartos'}</summary>
+              <summary aria-describedby="occupancy-label">{adults} {adults === 1 ? 'adulto' : 'adultos'} · {children} {children === 1 ? 'criança' : 'crianças'}</summary>
               <div className="occupancy-picker__fields">
                 <label htmlFor="catalog-adults">Adultos<input id="catalog-adults" type="number" min="1" max="30" required value={adults} onChange={(event) => setAdults(event.target.value === '' ? '' : Number(event.target.value))} /></label>
                 <label htmlFor="catalog-children">Crianças<input id="catalog-children" type="number" min="0" max="30" required value={children} onChange={(event) => setChildren(event.target.value === '' ? '' : Number(event.target.value))} /></label>
-                <label htmlFor="catalog-rooms">Quartos<input id="catalog-rooms" type="number" min="1" max="30" required value={rooms} onChange={(event) => setRooms(event.target.value === '' ? '' : Number(event.target.value))} /></label>
               </div>
             </details>
           </div>
@@ -117,11 +126,11 @@ export default function Homepage({ setPaginaAtual }) {
         {error && <div className="catalog-error" role="alert"><p>{error}</p>
           <button className="catalog-button" type="button" onClick={() => setRetry((value) => value + 1)}>Tentar novamente</button></div>}
 
-        {!loading && !error && data?.content.length === 0 && <p>Nenhum hotel encontrado. Tente outra cidade ou nome.</p>}
+        {!loading && !error && data?.content.length === 0 && <p>Nenhum hotel atende à pesquisa. Tente outra cidade, período ou quantidade de hóspedes.</p>}
         <section className="card__layout" aria-label="Hotéis" aria-busy={loading}>
-          {data?.content.map((hotel) => <HotelCard key={hotel.hotel_id} hotel={hotel} onSelect={setSelected} />)}
+          {!loading && !error && data?.content.map((hotel) => <HotelCard key={hotel.hotel_id} hotel={hotel} onSelect={setSelected} />)}
         </section>
-        {data?.totalPages > 0 && <nav className="catalog-pagination" aria-label="Páginas de hotéis">
+        {!loading && !error && data?.totalPages > 0 && <nav className="catalog-pagination" aria-label="Páginas de hotéis">
           <button type="button" disabled={loading || query.page === 0} onClick={() => changePage(query.page - 1)}>Anterior</button>
           <span aria-live="polite">Página {data.page + 1} de {data.totalPages}</span>
           <button type="button" disabled={loading || query.page >= data.totalPages - 1} onClick={() => changePage(query.page + 1)}>Próxima</button>

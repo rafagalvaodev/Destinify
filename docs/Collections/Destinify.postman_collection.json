@@ -1,0 +1,3273 @@
+{
+  "info": {
+    "_postman_id": "52b4c2b0-87c1-480c-be7c-c0b89d3290b0",
+    "name": "Destinify",
+    "description": "Collection alinhada aos controllers e DTOs atuais. Leia README.md nesta pasta. Comece por executar SOMENTE a pasta 01 — Fluxo principal. Ela cria um cliente de teste e percorre busca, promoções, reserva, pagamento e cancelamento. Datas futuras e IDs/tokens são preenchidos por scripts. Google, ADMIN, prazo e exclusões são pastas opcionais, com pré-requisitos próprios. Não execute toda a collection de uma vez. Não há endpoint CRUD de promoções; os descontos são calculados por /bookings/summary e /bookings. Valores e calendários vêm do backend.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "43471466",
+    "_collection_link": "https://go.postman.co/collection/43471466-52b4c2b0-87c1-480c-be7c-c0b89d3290b0?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "01 - Fluxo principal",
+      "item": [
+        {
+          "name": "01 - Cadastrar cliente de teste",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const runId = Date.now().toString() + Math.floor(Math.random()*100000).toString();\npm.collectionVariables.set(\"clientEmail\", \"postman.\" + runId + \"@example.com\");\npm.collectionVariables.set(\"clientPassword\", \"DestinifyTeste123!\");\nfor (const key of [\"accessToken\", \"refreshToken\", \"bookingId\", \"ownerBookingId\", \"secondAccessToken\"]) pm.collectionVariables.set(key, \"\");\nconst start = new Date(); start.setUTCDate(start.getUTCDate()+30);\nconst end = new Date(start); end.setUTCDate(end.getUTCDate()+2);\npm.collectionVariables.set(\"checkIn\", start.toISOString().slice(0,10));\npm.collectionVariables.set(\"checkOut\", end.toISOString().slice(0,10));\npm.collectionVariables.set(\"city\", \"Salvador\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(201));\nif (pm.response.code === 201) {\npm.collectionVariables.set(\"userId\", pm.response.json().id);\n}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Cliente Postman\",\n  \"email\": \"{{clientEmail}}\",\n  \"password\": \"{{clientPassword}}\",\n  \"birthdate\": \"1995-02-20\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "register"
+              ]
+            },
+            "description": "Cria uma conta CLIENT. O e-mail é gerado uma vez por execução da pasta. Não utiliza dados de usuários reais."
+          },
+          "response": []
+        },
+        {
+          "name": "02 - Login do cliente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(200));\nif (pm.response.code === 200) {\nconst data = pm.response.json();\npm.test(\"Tokens recebidos\", () => { pm.expect(data.accessToken).to.be.a('string').and.not.empty; pm.expect(data.refreshToken).to.be.a('string').and.not.empty; });\npm.collectionVariables.set(\"accessToken\", data.accessToken);\npm.collectionVariables.set(\"refreshToken\", data.refreshToken);\n}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{clientEmail}}\",\n  \"password\": \"{{clientPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "03 - Meu perfil",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(200));\nif (pm.response.code === 200) {\npm.collectionVariables.set(\"userId\", pm.response.json().id);\n}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "04 - Renovar tokens",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(200));\nif (pm.response.code === 200) {\nconst data = pm.response.json();\npm.test(\"Tokens recebidos\", () => { pm.expect(data.accessToken).to.be.a('string').and.not.empty; pm.expect(data.refreshToken).to.be.a('string').and.not.empty; });\npm.collectionVariables.set(\"accessToken\", data.accessToken);\npm.collectionVariables.set(\"refreshToken\", data.refreshToken);\n}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/update-token",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "update-token"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "05 - Buscar nove hóspedes e guardar sugestão",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(200));\nif (pm.response.code === 200) {\npm.test(\"Resposta paginada\", () => { const data = pm.response.json(); pm.expect(data.content).to.be.an(\"array\"); pm.expect(data.totalElements).to.be.a(\"number\"); });\nconst hotels = pm.response.json().content;\npm.test(\"Hotel com quartos suficientes encontrado\", () => pm.expect(hotels.length).to.be.greaterThan(0));\nif (hotels.length) {\n  const hotel = hotels[0];\n  pm.collectionVariables.set(\"hotelId\", hotel.hotel_id);\n  pm.collectionVariables.set(\"roomIds\", JSON.stringify(hotel.suggestedRooms.map(r => r.room_id)));\n  pm.collectionVariables.set(\"roomId\", hotel.suggestedRooms[0].room_id);\n  pm.test(\"Capacidade da sugestão\", () => pm.expect(hotel.suggestedRooms.reduce((sum,r) => sum+r.maxCapacity,0)).to.be.at.least(9));\n}\n}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/hotels/search?city={{city}}&guests=9&startDate={{checkIn}}&endDate={{checkOut}}&page=0&size=12",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "hotels",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "city",
+                  "value": "{{city}}"
+                },
+                {
+                  "key": "guests",
+                  "value": "9"
+                },
+                {
+                  "key": "startDate",
+                  "value": "{{checkIn}}"
+                },
+                {
+                  "key": "endDate",
+                  "value": "{{checkOut}}"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "12"
+                }
+              ]
+            },
+            "description": "Seleciona automaticamente um hotel e os quartos necessários. Usa Salvador e as datas futuras geradas no cadastro. Requer capacidade disponível para nove hóspedes; a massa V7 fornece cinco quartos/capacidade nove por hotel."
+          },
+          "response": []
+        },
+        {
+          "name": "06 - Resumo sem promoção de grupo (sete pessoas)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(200));\nif (pm.response.code === 200) {\nconst q = pm.response.json();\npm.test(\"Valores consistentes\", () => {\n  pm.expect(Math.round((q.basePrice - q.discountTotal) * 100)).to.eql(Math.round(q.totalPrice * 100));\n  const sum = q.promotions.reduce((n, p) => n + p.amount, 0);\n  pm.expect(Math.round(sum * 100)).to.eql(Math.round(q.discountTotal * 100));\n});\npm.test(\"Sem desconto de grupo abaixo de oito pessoas\", () => pm.expect(q.promotions.some(p => p.code === \"GROUP\")).to.eql(false));\n}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"hotelId\": {{hotelId}},\n  \"roomIds\": {{roomIds}},\n  \"checkInDate\": \"{{checkIn}}\",\n  \"checkOutDate\": \"{{checkOut}}\",\n  \"guestsCount\": 7,\n  \"adultsCount\": 7,\n  \"childrenAges\": []\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/bookings/summary",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bookings",
+                "summary"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "07 - Resumo com grupo (oito pessoas)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(200));\nif (pm.response.code === 200) {\nconst q = pm.response.json();\npm.test(\"Valores consistentes\", () => {\n  pm.expect(Math.round((q.basePrice - q.discountTotal) * 100)).to.eql(Math.round(q.totalPrice * 100));\n  const sum = q.promotions.reduce((n, p) => n + p.amount, 0);\n  pm.expect(Math.round(sum * 100)).to.eql(Math.round(q.discountTotal * 100));\n});\npm.test(\"Desconto para oito ou mais pessoas\", () => pm.expect(q.promotions.some(p => p.code === \"GROUP\")).to.eql(true));\n}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"hotelId\": {{hotelId}},\n  \"roomIds\": {{roomIds}},\n  \"checkInDate\": \"{{checkIn}}\",\n  \"checkOutDate\": \"{{checkOut}}\",\n  \"guestsCount\": 8,\n  \"adultsCount\": 8,\n  \"childrenAges\": []\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/bookings/summary",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bookings",
+                "summary"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "08 - Resumo infantil (uma criança de seis anos)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(200));\nif (pm.response.code === 200) {\nconst q = pm.response.json();\npm.test(\"Valores consistentes\", () => {\n  pm.expect(Math.round((q.basePrice - q.discountTotal) * 100)).to.eql(Math.round(q.totalPrice * 100));\n  const sum = q.promotions.reduce((n, p) => n + p.amount, 0);\n  pm.expect(Math.round(sum * 100)).to.eql(Math.round(q.discountTotal * 100));\n});\npm.test(\"Um desconto infantil de 10%\", () => { const lines = q.promotions.filter(p => p.code === \"CHILD_UNDER_7\"); pm.expect(lines.length).to.eql(1); pm.expect(lines[0].percentage).to.eql(10); });\n}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"hotelId\": {{hotelId}},\n  \"roomIds\": {{roomIds}},\n  \"checkInDate\": \"{{checkIn}}\",\n  \"checkOutDate\": \"{{checkOut}}\",\n  \"guestsCount\": 3,\n  \"adultsCount\": 2,\n  \"childrenAges\": [6]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/bookings/summary",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bookings",
+                "summary"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "09 - Resumo infantil não multiplica por criança",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(200));\nif (pm.response.code === 200) {\nconst q = pm.response.json();\npm.test(\"Valores consistentes\", () => {\n  pm.expect(Math.round((q.basePrice - q.discountTotal) * 100)).to.eql(Math.round(q.totalPrice * 100));\n  const sum = q.promotions.reduce((n, p) => n + p.amount, 0);\n  pm.expect(Math.round(sum * 100)).to.eql(Math.round(q.discountTotal * 100));\n});\npm.test(\"Benefício uma única vez\", () => pm.expect(q.promotions.filter(p => p.code === \"CHILD_UNDER_7\").length).to.eql(1));\n}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"hotelId\": {{hotelId}},\n  \"roomIds\": {{roomIds}},\n  \"checkInDate\": \"{{checkIn}}\",\n  \"checkOutDate\": \"{{checkOut}}\",\n  \"guestsCount\": 4,\n  \"adultsCount\": 2,\n  \"childrenAges\": [2, 6]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/bookings/summary",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bookings",
+                "summary"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "10 - Criança de sete anos não recebe desconto infantil",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(200));\nif (pm.response.code === 200) {\nconst q = pm.response.json();\npm.test(\"Valores consistentes\", () => {\n  pm.expect(Math.round((q.basePrice - q.discountTotal) * 100)).to.eql(Math.round(q.totalPrice * 100));\n  const sum = q.promotions.reduce((n, p) => n + p.amount, 0);\n  pm.expect(Math.round(sum * 100)).to.eql(Math.round(q.discountTotal * 100));\n});\npm.test(\"Fora da faixa infantil\", () => pm.expect(q.promotions.some(p => p.code === \"CHILD_UNDER_7\")).to.eql(false));\n}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"hotelId\": {{hotelId}},\n  \"roomIds\": {{roomIds}},\n  \"checkInDate\": \"{{checkIn}}\",\n  \"checkOutDate\": \"{{checkOut}}\",\n  \"guestsCount\": 3,\n  \"adultsCount\": 2,\n  \"childrenAges\": [7]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/bookings/summary",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bookings",
+                "summary"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "11 - Criar reserva pendente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(201));\nif (pm.response.code === 201) {\nconst q = pm.response.json();\npm.test(\"Valores consistentes\", () => {\n  pm.expect(Math.round((q.basePrice - q.discountTotal) * 100)).to.eql(Math.round(q.totalPrice * 100));\n  const sum = q.promotions.reduce((n, p) => n + p.amount, 0);\n  pm.expect(Math.round(sum * 100)).to.eql(Math.round(q.discountTotal * 100));\n});\npm.collectionVariables.set(\"bookingId\", pm.response.json().id);\npm.collectionVariables.set(\"ownerBookingId\", pm.response.json().id);\npm.collectionVariables.set(\"bookingTotal\", pm.response.json().totalPrice);\npm.test(\"Status inicial pendente\", () => pm.expect(q.status).to.eql(\"PENDING\"));\n}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"hotelId\": {{hotelId}},\n  \"roomIds\": {{roomIds}},\n  \"checkInDate\": \"{{checkIn}}\",\n  \"checkOutDate\": \"{{checkOut}}\",\n  \"guestsCount\": 3,\n  \"adultsCount\": 2,\n  \"childrenAges\": [6]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/bookings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bookings"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "12 - Tentar reservar os mesmos quartos (conflito)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(409));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"hotelId\": {{hotelId}},\n  \"roomIds\": {{roomIds}},\n  \"checkInDate\": \"{{checkIn}}\",\n  \"checkOutDate\": \"{{checkOut}}\",\n  \"guestsCount\": 3,\n  \"adultsCount\": 2,\n  \"childrenAges\": [6]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/bookings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bookings"
+              ]
+            },
+            "description": "Reexecuta o corpo da reserva anterior; espera 409 enquanto ela estiver ativa."
+          },
+          "response": []
+        },
+        {
+          "name": "13 - Consultar reserva",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/bookings/{{bookingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bookings",
+                "{{bookingId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "14 - Listar minhas reservas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(200));\nif (pm.response.code === 200) {\npm.test(\"Resposta paginada\", () => { const data = pm.response.json(); pm.expect(data.content).to.be.an(\"array\"); pm.expect(data.totalElements).to.be.a(\"number\"); });\n}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/bookings/me?page=0&size=10&sort=checkInDate,desc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bookings",
+                "me"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                },
+                {
+                  "key": "sort",
+                  "value": "checkInDate,desc"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "15 - Editar reserva pendente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(200));\nif (pm.response.code === 200) {\nconst q = pm.response.json();\npm.test(\"Valores consistentes\", () => {\n  pm.expect(Math.round((q.basePrice - q.discountTotal) * 100)).to.eql(Math.round(q.totalPrice * 100));\n  const sum = q.promotions.reduce((n, p) => n + p.amount, 0);\n  pm.expect(Math.round(sum * 100)).to.eql(Math.round(q.discountTotal * 100));\n});\npm.collectionVariables.set(\"bookingTotal\", pm.response.json().totalPrice);\n}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"checkOutDate\": \"{{checkOut}}\",\n  \"guestsCount\": 3,\n  \"adultsCount\": 2,\n  \"childrenAges\": [\n    6\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/bookings/{{bookingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bookings",
+                "{{bookingId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "16 - Confirmar pagamento da reserva",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(200));\nif (pm.response.code === 200) {\nconst payment = pm.response.json();\npm.collectionVariables.set(\"paymentId\", payment.id);\npm.test(\"Pagamento aprovado e com valor da reserva\", () => {\n  pm.expect(payment.paymentStatus).to.eql(\"APPROVED\");\n  pm.expect(Math.round(payment.amount*100)).to.eql(Math.round(Number(pm.collectionVariables.get(\"bookingTotal\"))*100));\n});\n}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/bookings/{{bookingId}}/pay",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bookings",
+                "{{bookingId}}",
+                "pay"
+              ]
+            },
+            "description": "O endpoint atual aprova o pagamento no fluxo interno da aplicação; não é um gateway de pagamento real."
+          },
+          "response": []
+        },
+        {
+          "name": "17- Verificar reserva confirmada",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(200));\nif (pm.response.code === 200) {\npm.test(\"Reserva confirmada\", () => pm.expect(pm.response.json().status).to.eql(\"CONFIRMED\"));\n}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/bookings/{{bookingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bookings",
+                "{{bookingId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "18 - Cancelar com antecedência superior a 72 horas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(200));\nif (pm.response.code === 200) {\npm.test(\"Reserva cancelada\", () => pm.expect(pm.response.json().status).to.eql(\"CANCELLED\"));\n}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/bookings/{{bookingId}}/cancel",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bookings",
+                "{{bookingId}}",
+                "cancel"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "19 - Consultar histórico após cancelar",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(200));\nif (pm.response.code === 200) {\npm.test(\"Resposta paginada\", () => { const data = pm.response.json(); pm.expect(data.content).to.be.an(\"array\"); pm.expect(data.totalElements).to.be.a(\"number\"); });\n}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/bookings/me?page=0&size=10&sort=checkInDate,desc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bookings",
+                "me"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                },
+                {
+                  "key": "sort",
+                  "value": "checkInDate,desc"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "20 - Quarto volta a estar disponível após cancelamento",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(200));\nif (pm.response.code === 200) {\nconst q = pm.response.json();\npm.test(\"Valores consistentes\", () => {\n  pm.expect(Math.round((q.basePrice - q.discountTotal) * 100)).to.eql(Math.round(q.totalPrice * 100));\n  const sum = q.promotions.reduce((n, p) => n + p.amount, 0);\n  pm.expect(Math.round(sum * 100)).to.eql(Math.round(q.discountTotal * 100));\n});\n}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"hotelId\": {{hotelId}},\n  \"roomIds\": {{roomIds}},\n  \"checkInDate\": \"{{checkIn}}\",\n  \"checkOutDate\": \"{{checkOut}}\",\n  \"guestsCount\": 3,\n  \"adultsCount\": 2,\n  \"childrenAges\": [6]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/bookings/summary",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bookings",
+                "summary"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "02 - Autenticação e perfil",
+      "item": [
+        {
+          "name": "Cadastrar cliente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(201));",
+                  "if (pm.response.code === 201) {",
+                  "pm.collectionVariables.set(\"userId\", pm.response.json().id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Cliente Postman\",\n  \"email\": \"{{clientEmail}}\",\n  \"password\": \"{{clientPassword}}\",\n  \"birthdate\": \"1995-02-20\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "register"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(200));",
+                  "if (pm.response.code === 200) {",
+                  "const data = pm.response.json();",
+                  "pm.test(\"Tokens recebidos\", () => { pm.expect(data.accessToken).to.be.a('string').and.not.empty; pm.expect(data.refreshToken).to.be.a('string').and.not.empty; });",
+                  "pm.collectionVariables.set(\"accessToken\", data.accessToken);",
+                  "pm.collectionVariables.set(\"refreshToken\", data.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{clientEmail}}\",\n  \"password\": \"{{clientPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Renovar sessão",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(200));",
+                  "if (pm.response.code === 200) {",
+                  "const data = pm.response.json();",
+                  "pm.test(\"Tokens recebidos\", () => { pm.expect(data.accessToken).to.be.a('string').and.not.empty; pm.expect(data.refreshToken).to.be.a('string').and.not.empty; });",
+                  "pm.collectionVariables.set(\"accessToken\", data.accessToken);",
+                  "pm.collectionVariables.set(\"refreshToken\", data.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/update-token",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "update-token"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Meu perfil",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Meu nome",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/me/name",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "me",
+                "name"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Atualizar perfil",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Cliente Postman Atualizado\",\n  \"email\": \"{{clientEmail}}\",\n  \"birthDate\": \"1995-02-20\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "me"
+              ]
+            },
+            "description": "O campo é birthDate na edição, mas birthdate no cadastro. Envie os três campos; o serviço substitui os valores. Se mudar o e-mail, renove os tokens antes da próxima chamada."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "03 - Catálogo público",
+      "item": [
+        {
+          "name": "Listar hotéis",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(200));",
+                  "if (pm.response.code === 200) {",
+                  "pm.test(\"Resposta paginada\", () => { const data = pm.response.json(); pm.expect(data.content).to.be.an(\"array\"); pm.expect(data.totalElements).to.be.a(\"number\"); });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/hotels?page=0&size=12",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "hotels"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "12"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Consultar hotel",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/hotels/{{hotelId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "hotels",
+                "{{hotelId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Pesquisar por nome e cidade",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(200));",
+                  "if (pm.response.code === 200) {",
+                  "pm.test(\"Resposta paginada\", () => { const data = pm.response.json(); pm.expect(data.content).to.be.an(\"array\"); pm.expect(data.totalElements).to.be.a(\"number\"); });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/hotels/search?city={{city}}&name=&page=0&size=12",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "hotels",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "city",
+                  "value": "{{city}}"
+                },
+                {
+                  "key": "name",
+                  "value": ""
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "12"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Buscar hóspedes e disponibilidade",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(200));",
+                  "if (pm.response.code === 200) {",
+                  "pm.test(\"Resposta paginada\", () => { const data = pm.response.json(); pm.expect(data.content).to.be.an(\"array\"); pm.expect(data.totalElements).to.be.a(\"number\"); });",
+                  "const hotels = pm.response.json().content;",
+                  "pm.test(\"Hotel com quartos suficientes encontrado\", () => pm.expect(hotels.length).to.be.greaterThan(0));",
+                  "if (hotels.length) {",
+                  "  const hotel = hotels[0];",
+                  "  pm.collectionVariables.set(\"hotelId\", hotel.hotel_id);",
+                  "  pm.collectionVariables.set(\"roomIds\", JSON.stringify(hotel.suggestedRooms.map(r => r.room_id)));",
+                  "  pm.collectionVariables.set(\"roomId\", hotel.suggestedRooms[0].room_id);",
+                  "  pm.test(\"Capacidade da sugestão\", () => pm.expect(hotel.suggestedRooms.reduce((sum,r) => sum+r.maxCapacity,0)).to.be.at.least(9));",
+                  "}",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/hotels/search?city={{city}}&guests=9&startDate={{checkIn}}&endDate={{checkOut}}&page=0&size=12",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "hotels",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "city",
+                  "value": "{{city}}"
+                },
+                {
+                  "key": "guests",
+                  "value": "9"
+                },
+                {
+                  "key": "startDate",
+                  "value": "{{checkIn}}"
+                },
+                {
+                  "key": "endDate",
+                  "value": "{{checkOut}}"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "12"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Quartos do hotel",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(200));",
+                  "if (pm.response.code === 200) {",
+                  "pm.test(\"Resposta paginada\", () => { const data = pm.response.json(); pm.expect(data.content).to.be.an(\"array\"); pm.expect(data.totalElements).to.be.a(\"number\"); });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/hotels/{{hotelId}}/rooms?page=0&size=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "hotels",
+                "{{hotelId}}",
+                "rooms"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar quartos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(200));",
+                  "if (pm.response.code === 200) {",
+                  "pm.test(\"Resposta paginada\", () => { const data = pm.response.json(); pm.expect(data.content).to.be.an(\"array\"); pm.expect(data.totalElements).to.be.a(\"number\"); });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rooms/all?page=0&size=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rooms",
+                "all"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Consultar quarto",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rooms/{{roomId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rooms",
+                "{{roomId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "04 - Festa local demonstrativa",
+      "item": [
+        {
+          "name": "Selecionar quartos em Salvador para a festa",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const start = new Date(\"2027-06-21T12:00:00Z\");",
+                  "if (new Date() >= start) throw new Error(\"Calendário demonstrativo expirou: cadastre uma festa futura e ajuste as datas desta pasta.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(200));",
+                  "if (pm.response.code === 200) {",
+                  "pm.test(\"Resposta paginada\", () => { const data = pm.response.json(); pm.expect(data.content).to.be.an(\"array\"); pm.expect(data.totalElements).to.be.a(\"number\"); });",
+                  "const hotels = pm.response.json().content;",
+                  "pm.test(\"Hotel com quartos suficientes encontrado\", () => pm.expect(hotels.length).to.be.greaterThan(0));",
+                  "if (hotels.length) {",
+                  "  const hotel = hotels[0];",
+                  "  pm.collectionVariables.set(\"hotelId\", hotel.hotel_id);",
+                  "  pm.collectionVariables.set(\"roomIds\", JSON.stringify(hotel.suggestedRooms.map(r => r.room_id)));",
+                  "  pm.collectionVariables.set(\"roomId\", hotel.suggestedRooms[0].room_id);",
+                  "  pm.test(\"Capacidade da sugestão\", () => pm.expect(hotel.suggestedRooms.reduce((sum,r) => sum+r.maxCapacity,0)).to.be.at.least(9));",
+                  "}",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/hotels/search?city=Salvador&guests=9&startDate=2027-06-21&endDate=2027-06-23&page=0&size=12",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "hotels",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "city",
+                  "value": "Salvador"
+                },
+                {
+                  "key": "guests",
+                  "value": "9"
+                },
+                {
+                  "key": "startDate",
+                  "value": "2027-06-21"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2027-06-23"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "12"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Grupo + festa + criança de seis anos",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const start = new Date(\"2027-06-21T12:00:00Z\");",
+                  "if (new Date() >= start) throw new Error(\"Calendário demonstrativo expirou: cadastre uma festa futura e ajuste as datas desta pasta.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(200));",
+                  "if (pm.response.code === 200) {",
+                  "const q = pm.response.json();",
+                  "pm.test(\"Valores consistentes\", () => {",
+                  "  pm.expect(Math.round((q.basePrice - q.discountTotal) * 100)).to.eql(Math.round(q.totalPrice * 100));",
+                  "  const sum = q.promotions.reduce((n, p) => n + p.amount, 0);",
+                  "  pm.expect(Math.round(sum * 100)).to.eql(Math.round(q.discountTotal * 100));",
+                  "});",
+                  "pm.test(\"Três benefícios acumulados\", () => {",
+                  "  pm.expect(q.promotions.some(p => p.code === \"GROUP\")).to.eql(true);",
+                  "  pm.expect(q.promotions.some(p => p.code.startsWith(\"LOCAL_\"))).to.eql(true);",
+                  "  pm.expect(q.promotions.some(p => p.code === \"CHILD_UNDER_7\")).to.eql(true);",
+                  "});",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"hotelId\": {{hotelId}},\n  \"roomIds\": {{roomIds}},\n  \"checkInDate\": \"2027-06-21\",\n  \"checkOutDate\": \"2027-06-23\",\n  \"guestsCount\": 9,\n  \"adultsCount\": 8,\n  \"childrenAges\": [6]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/bookings/summary",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bookings",
+                "summary"
+              ]
+            },
+            "description": "Na massa original, base R$ 3.100,00 e total R$ 2.259,90. O teste usa os valores recebidos porque preços e percentuais podem ter sido alterados."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "05 - Validações e autorização",
+      "item": [
+        {
+          "name": "Login com senha inválida",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{clientEmail}}\",\n  \"password\": \"senha-incorreta\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "O contrato atual devolve 403 (ForbiddenException), e não 401."
+          },
+          "response": []
+        },
+        {
+          "name": "Quarto inexistente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rooms/9223372036854775807",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rooms",
+                "9223372036854775807"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Busca com quantidade inválida",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/hotels/search?guests=0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "hotels",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "guests",
+                  "value": "0"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Busca com período incompleto",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/hotels/search?guests=3&startDate={{checkIn}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "hotels",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "guests",
+                  "value": "3"
+                },
+                {
+                  "key": "startDate",
+                  "value": "{{checkIn}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Resumo com datas invertidas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"hotelId\": {{hotelId}},\n  \"roomIds\": {{roomIds}},\n  \"checkInDate\": \"{{checkOut}}\",\n  \"checkOutDate\": \"{{checkIn}}\",\n  \"guestsCount\": 3,\n  \"adultsCount\": 2,\n  \"childrenAges\": [6]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/bookings/summary",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bookings",
+                "summary"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Resumo com hóspedes inconsistentes",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"hotelId\": {{hotelId}},\n  \"roomIds\": {{roomIds}},\n  \"checkInDate\": \"{{checkIn}}\",\n  \"checkOutDate\": \"{{checkOut}}\",\n  \"guestsCount\": 3,\n  \"adultsCount\": 1,\n  \"childrenAges\": []\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/bookings/summary",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bookings",
+                "summary"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Resumo com criança fora da faixa permitida",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"hotelId\": {{hotelId}},\n  \"roomIds\": {{roomIds}},\n  \"checkInDate\": \"{{checkIn}}\",\n  \"checkOutDate\": \"{{checkOut}}\",\n  \"guestsCount\": 3,\n  \"adultsCount\": 2,\n  \"childrenAges\": [18]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/bookings/summary",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bookings",
+                "summary"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Resumo excede capacidade",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"hotelId\": {{hotelId}},\n  \"roomIds\": {{roomIds}},\n  \"checkInDate\": \"{{checkIn}}\",\n  \"checkOutDate\": \"{{checkOut}}\",\n  \"guestsCount\": 60,\n  \"adultsCount\": 60,\n  \"childrenAges\": []\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/bookings/summary",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bookings",
+                "summary"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Cliente não lista todos os usuários",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/all-users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "all-users"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Cliente não cria hotel",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Não deve criar\",\n  \"city\": \"Salvador\",\n  \"address\": \"Rua Teste\",\n  \"stars\": 4,\n  \"pricePerNight\": 100\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/hotels",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "hotels"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Cliente não edita quarto",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Não deve editar\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/rooms/{{roomId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rooms",
+                "{{roomId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Acesso ao perfil sem token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "me"
+              ]
+            },
+            "description": "Sem authenticationEntryPoint específico, a configuração atual do Spring Security retorna 403. Não há token herdado nesta requisição."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "06 - Cancelamento fora do prazo",
+      "item": [
+        {
+          "name": "Criar reserva com chegada amanhã",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const start = new Date(); start.setUTCDate(start.getUTCDate()+1);",
+                  "const end = new Date(start); end.setUTCDate(end.getUTCDate()+1);",
+                  "pm.collectionVariables.set(\"nearCheckIn\",start.toISOString().slice(0,10));",
+                  "pm.collectionVariables.set(\"nearCheckOut\",end.toISOString().slice(0,10));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(201));",
+                  "if (pm.response.code === 201) {",
+                  "pm.collectionVariables.set(\"nearBookingId\", pm.response.json().id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"hotelId\": {{hotelId}},\n  \"roomIds\": {{roomIds}},\n  \"checkInDate\": \"{{nearCheckIn}}\",\n  \"checkOutDate\": \"{{nearCheckOut}}\",\n  \"guestsCount\": 3,\n  \"adultsCount\": 2,\n  \"childrenAges\": [6]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/bookings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bookings"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Cancelar dentro de 72 horas (rejeitado)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/bookings/{{nearBookingId}}/cancel",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bookings",
+                "{{nearBookingId}}",
+                "cancel"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Verificar que continua pendente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(200));",
+                  "if (pm.response.code === 200) {",
+                  "pm.test(\"Cancelamento rejeitado preserva status\", () => pm.expect(pm.response.json().status).to.eql(\"PENDING\"));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/bookings/{{nearBookingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bookings",
+                "{{nearBookingId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "07 - Propriedade das reservas",
+      "item": [
+        {
+          "name": "Cadastrar segundo cliente",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"secondEmail\", \"postman.other.\" + Date.now() + \"@example.com\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(201));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Segundo Cliente Postman\",\n  \"email\": \"{{secondEmail}}\",\n  \"birthdate\": \"1996-03-15\",\n  \"password\": \"{{clientPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "register"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login do segundo cliente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(200));",
+                  "if (pm.response.code === 200) {",
+                  "const data = pm.response.json();",
+                  "pm.test(\"Tokens recebidos\", () => { pm.expect(data.accessToken).to.be.a('string').and.not.empty; pm.expect(data.refreshToken).to.be.a('string').and.not.empty; });",
+                  "pm.collectionVariables.set(\"secondAccessToken\", data.accessToken);",
+                  "pm.collectionVariables.set(\"secondRefreshToken\", data.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{secondEmail}}\",\n  \"password\": \"{{clientPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Não consultar reserva alheia",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{secondAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/bookings/{{ownerBookingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bookings",
+                "{{ownerBookingId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Não cancelar reserva alheia",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{secondAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/bookings/{{ownerBookingId}}/cancel",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bookings",
+                "{{ownerBookingId}}",
+                "cancel"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "08 - Administração",
+      "item": [
+        {
+          "name": "Login do administrador",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.variables.get(\"adminEmail\") || !pm.variables.get(\"adminPassword\")) throw new Error(\"Preencha adminEmail e adminPassword nas variáveis da collection. Use uma conta ADMIN existente.\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(200));",
+                  "if (pm.response.code === 200) {",
+                  "const data = pm.response.json();",
+                  "pm.test(\"Tokens recebidos\", () => { pm.expect(data.accessToken).to.be.a('string').and.not.empty; pm.expect(data.refreshToken).to.be.a('string').and.not.empty; });",
+                  "pm.collectionVariables.set(\"adminAccessToken\", data.accessToken);",
+                  "pm.collectionVariables.set(\"adminRefreshToken\", data.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar usuários (ADMIN)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/all-users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "all-users"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar todas as reservas (ADMIN)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(200));",
+                  "if (pm.response.code === 200) {",
+                  "pm.test(\"Resposta paginada\", () => { const data = pm.response.json(); pm.expect(data.content).to.be.an(\"array\"); pm.expect(data.totalElements).to.be.a(\"number\"); });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/bookings/all?page=0&size=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bookings",
+                "all"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Criar hotel de teste",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(201));",
+                  "if (pm.response.code === 201) {",
+                  "pm.collectionVariables.set(\"adminHotelId\", pm.response.json().hotel_id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Hotel Postman\",\n  \"city\": \"Salvador\",\n  \"address\": \"Rua de Teste, 100\",\n  \"description\": \"Criado para testes da API\",\n  \"pricePerNight\": 200,\n  \"stars\": 4,\n  \"imageUrl\": \"\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/hotels",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "hotels"
+              ]
+            },
+            "description": "pricePerNight ainda é obrigatório no DTO de criação, embora a diária efetiva seja armazenada no quarto."
+          },
+          "response": []
+        },
+        {
+          "name": "Editar hotel de teste",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Hotel Postman Atualizado\",\n  \"city\": \"Salvador\",\n  \"address\": \"Rua de Teste, 101\",\n  \"description\": \"Atualizado pela collection\",\n  \"stars\": 4,\n  \"imageUrl\": \"\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/hotels/{{adminHotelId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "hotels",
+                "{{adminHotelId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Criar quarto no hotel de teste",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(201));",
+                  "if (pm.response.code === 201) {",
+                  "pm.collectionVariables.set(\"adminRoomId\", pm.response.json().room_id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n \"name\": \"Quarto Postman\", \"hotelId\": {{adminHotelId}}, \"description\": \"Quarto triplo de teste\",\n \"roomType\": \"TRIPLE\", \"price\": 200, \"imgUrl\": \"\", \"roomStatus\": \"AVALIABLE\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/rooms/newRoom",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rooms",
+                "newRoom"
+              ]
+            },
+            "description": "A grafia AVALIABLE corresponde ao enum atual. O serviço força esse status ao criar."
+          },
+          "response": []
+        },
+        {
+          "name": "Editar quarto de teste",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Quarto Postman Atualizado\",\n  \"price\": 220,\n  \"roomStatus\": \"AVALIABLE\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/rooms/{{adminRoomId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rooms",
+                "{{adminRoomId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "09 - Manutenção dos dados de teste",
+      "item": [
+        {
+          "name": "Alterar senha do cliente de teste",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(204));",
+                  "if (pm.response.code === 204) {",
+                  "pm.collectionVariables.set(\"clientPassword\", pm.variables.get(\"newClientPassword\"));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"{{clientPassword}}\",\n  \"newPassword\": \"{{newClientPassword}}\",\n  \"confirmNewPassword\": \"{{newClientPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/me/password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "me",
+                "password"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Excluir reserva de prazo curto",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/bookings/{{nearBookingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bookings",
+                "{{nearBookingId}}"
+              ]
+            },
+            "description": "Use apenas nearBookingId criado pela pasta de prazo. A rota exige autenticação, mas atualmente NÃO verifica ADMIN nem propriedade no backend; a collection usa ADMIN por organização. Esta exclusão é definitiva."
+          },
+          "response": []
+        },
+        {
+          "name": "Excluir quarto criado pelo administrador",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rooms/{{adminRoomId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rooms",
+                "{{adminRoomId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Excluir hotel criado pelo administrador",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/hotels/{{adminHotelId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "hotels",
+                "{{adminHotelId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Excluir segundo cliente de teste",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(204));",
+                  "if (pm.response.code === 204) {",
+                  "pm.collectionVariables.set(\"secondAccessToken\", \"\");",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{secondAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Excluir cliente de teste",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(204));",
+                  "if (pm.response.code === 204) {",
+                  "for (const key of [\"accessToken\", \"refreshToken\", \"userId\"]) pm.collectionVariables.set(key, \"\");",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "10 - Google OAuth (manual)",
+      "item": [
+        {
+          "name": "Iniciar login Google (abrir no navegador)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(302));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Manual. Desative Follow redirects no Postman para observar o 302, ou abra esta URL no navegador e conclua o consentimento. Não execute em lote."
+          },
+          "response": []
+        },
+        {
+          "name": "Callback Google (manual)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(302));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login/google/autorizado?code={{googleCode}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login",
+                "google",
+                "autorizado"
+              ],
+              "query": [
+                {
+                  "key": "code",
+                  "value": "{{googleCode}}"
+                }
+              ]
+            },
+            "description": "Usa um código real de uso único emitido pelo Google. O callback redireciona para o frontend com googleTicket. Não invente valores; não execute em lote."
+          },
+          "response": []
+        },
+        {
+          "name": "Trocar ticket por tokens",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status HTTP esperado\", () => pm.expect(pm.response.code).to.eql(200));",
+                  "if (pm.response.code === 200) {",
+                  "const data = pm.response.json();",
+                  "pm.test(\"Tokens recebidos\", () => { pm.expect(data.accessToken).to.be.a('string').and.not.empty; pm.expect(data.refreshToken).to.be.a('string').and.not.empty; });",
+                  "pm.collectionVariables.set(\"accessToken\", data.accessToken);",
+                  "pm.collectionVariables.set(\"refreshToken\", data.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "ticket",
+                  "value": "{{googleTicket}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login/google/exchange",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login",
+                "google",
+                "exchange"
+              ]
+            },
+            "description": "Cole em googleTicket o ticket obtido pelo fluxo Google; ele expira em 60 segundos e só pode ser usado uma vez. O frontend normalmente o consome automaticamente."
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080/api"
+    },
+    {
+      "key": "clientEmail",
+      "value": ""
+    },
+    {
+      "key": "clientPassword",
+      "value": "DestinifyTeste123!"
+    },
+    {
+      "key": "newClientPassword",
+      "value": "DestinifyNovaSenha123!"
+    },
+    {
+      "key": "accessToken",
+      "value": ""
+    },
+    {
+      "key": "refreshToken",
+      "value": ""
+    },
+    {
+      "key": "userId",
+      "value": ""
+    },
+    {
+      "key": "city",
+      "value": "Salvador"
+    },
+    {
+      "key": "checkIn",
+      "value": ""
+    },
+    {
+      "key": "checkOut",
+      "value": ""
+    },
+    {
+      "key": "hotelId",
+      "value": ""
+    },
+    {
+      "key": "roomId",
+      "value": ""
+    },
+    {
+      "key": "roomIds",
+      "value": "[]"
+    },
+    {
+      "key": "bookingId",
+      "value": ""
+    },
+    {
+      "key": "ownerBookingId",
+      "value": ""
+    },
+    {
+      "key": "bookingTotal",
+      "value": ""
+    },
+    {
+      "key": "paymentId",
+      "value": ""
+    },
+    {
+      "key": "nearBookingId",
+      "value": ""
+    },
+    {
+      "key": "nearCheckIn",
+      "value": ""
+    },
+    {
+      "key": "nearCheckOut",
+      "value": ""
+    },
+    {
+      "key": "secondEmail",
+      "value": ""
+    },
+    {
+      "key": "secondAccessToken",
+      "value": ""
+    },
+    {
+      "key": "secondRefreshToken",
+      "value": ""
+    },
+    {
+      "key": "adminEmail",
+      "value": ""
+    },
+    {
+      "key": "adminPassword",
+      "value": ""
+    },
+    {
+      "key": "adminAccessToken",
+      "value": ""
+    },
+    {
+      "key": "adminRefreshToken",
+      "value": ""
+    },
+    {
+      "key": "adminHotelId",
+      "value": ""
+    },
+    {
+      "key": "adminRoomId",
+      "value": ""
+    },
+    {
+      "key": "googleCode",
+      "value": ""
+    },
+    {
+      "key": "googleTicket",
+      "value": ""
+    }
+  ]
+}

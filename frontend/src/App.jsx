@@ -7,6 +7,7 @@ import Admin from './admin/Admin';
 import Homepage from './pages/Homepage/Homepage';
 
 function App() {
+  const [paymentBooking, setPaymentBooking] = useState(null);
   const googleExchange = React.useRef(null);
 
   // Abre o catálogo público e processa retornos do Google quando necessário.
@@ -79,7 +80,7 @@ function App() {
   }, [paginaAtual]);
 
   React.useEffect(() => {
-    if (paginaAtual !== 'userPanel') return;
+    if (paginaAtual !== 'userPanel' || paymentBooking) return;
     let active = true;
     fetch('http://localhost:8080/api/users/all-users', {
       headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` },
@@ -87,13 +88,24 @@ function App() {
       if (active && response.ok) setPaginaAtual('admin');
     }).catch(() => {});
     return () => { active = false; };
-  }, [paginaAtual]);
+  }, [paginaAtual, paymentBooking]);
+
+  function leaveAccount(page) {
+    setPaymentBooking(null);
+    setPaginaAtual(page);
+  }
+
+  function openBookingPayment(booking) {
+    setPaymentBooking(booking);
+    setPaginaAtual('userPanel');
+    window.scrollTo({ top: 0 });
+  }
 
   return (
     <div>
       {paginaAtual === 'checking' && <p role="status">Concluindo login…</p>}
       {paginaAtual === 'home' && (
-        <Homepage setPaginaAtual={setPaginaAtual} />
+        <Homepage setPaginaAtual={setPaginaAtual} onBookingCreated={openBookingPayment} />
       )}
       
       {paginaAtual === 'login' && (
@@ -105,7 +117,7 @@ function App() {
       )}
 
       {paginaAtual === 'userPanel' && (
-        <UserPanel setPaginaAtual={setPaginaAtual} />
+        <UserPanel setPaginaAtual={leaveAccount} paymentBooking={paymentBooking} onPaymentClosed={() => setPaymentBooking(null)} />
       )}
       {paginaAtual === 'admin' && <Admin setPaginaAtual={setPaginaAtual} />}
     </div>

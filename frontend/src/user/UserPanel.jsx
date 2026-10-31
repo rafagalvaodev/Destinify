@@ -9,7 +9,7 @@ import './UserPanel.css';
 
 const emptyPassword = { currentPassword: '', newPassword: '', confirmNewPassword: '' };
 
-export default function UserPanel({ setPaginaAtual }) {
+export default function UserPanel({ setPaginaAtual, paymentBooking = null, onPaymentClosed = () => {} }) {
   const [section, setSection] = useState('bookings');
   const [user, setUser] = useState(null);
   const [bookings, setBookings] = useState([]);
@@ -25,7 +25,7 @@ export default function UserPanel({ setPaginaAtual }) {
   const [editingBooking, setEditingBooking] = useState(null);
   const [editBooking, setEditBooking] = useState({ checkInDate: '', checkOutDate: '', guestsCount: 1 });
   const [pendingCancel, setPendingCancel] = useState(null);
-  const [pendingPayment, setPendingPayment] = useState(null);
+  const [pendingPayment, setPendingPayment] = useState(paymentBooking);
   const [page, setPage] = useState(0);
 
   useEffect(() => {
@@ -118,7 +118,8 @@ export default function UserPanel({ setPaginaAtual }) {
       const updated = await apiRequest(`/bookings/${id}/cancel`, { method: 'PATCH' });
       setBookings((current) => current.map((booking) => booking.id === id ? updated : booking));
       setPendingCancel(null);
-      setNotice(`A reserva #${id} foi cancelada.`);
+      const hotelName = updated.hotelName || bookings.find((booking) => booking.id === id)?.hotelName;
+      setNotice(hotelName ? `Reserva no hotel ${hotelName} cancelada.` : 'Reserva no hotel cancelada.');
     });
   }
 
@@ -126,13 +127,18 @@ export default function UserPanel({ setPaginaAtual }) {
     runAction(async () => {
       await apiRequest(`/bookings/${id}/pay`, { method: 'POST' });
       setBookings((current) => current.map((booking) => booking.id === id ? { ...booking, status: 'CONFIRMED' } : booking));
-      setPendingPayment(null);
+      closePayment();
     });
+  }
+
+  function closePayment() {
+    setPendingPayment(null);
+    onPaymentClosed();
   }
 
   function openEditBooking(booking) {
     setEditingBooking(booking);
-    setEditBooking({ checkInDate: booking.checkInDate, checkOutDate: booking.checkOutDate, guestsCount: booking.guestsCount });
+    setEditBooking({ checkInDate: booking.checkInDate, checkOutDate: booking.checkOutDate, adultsCount: booking.adultsCount ?? booking.guestsCount, childrenAges: booking.childrenAges || [] });
   }
 
   function updateBooking(event) {
@@ -140,7 +146,7 @@ export default function UserPanel({ setPaginaAtual }) {
     runAction(async () => {
       const updated = await apiRequest(`/bookings/${editingBooking.id}`, {
         method: 'PATCH',
-        body: JSON.stringify({ ...editBooking, guestsCount: Number(editBooking.guestsCount) }),
+        body: JSON.stringify({ ...editBooking, adultsCount: Number(editBooking.adultsCount), childrenAges: editBooking.childrenAges.map(Number), guestsCount: Number(editBooking.adultsCount) + editBooking.childrenAges.length }),
       });
       setBookings((current) => current.map((booking) => booking.id === updated.id ? updated : booking));
       setEditingBooking(null);
@@ -176,8 +182,8 @@ export default function UserPanel({ setPaginaAtual }) {
 
       <BookingDetailsModal booking={selectedBooking} onClose={() => setSelectedBooking(null)} />
       <BookingEditModal booking={editingBooking} values={editBooking} setValues={setEditBooking} saving={saving} onSubmit={updateBooking} onClose={() => setEditingBooking(null)} />
-      <PaymentModal booking={pendingPayment} saving={saving} onConfirm={payBooking} onClose={() => setPendingPayment(null)} />
-      <ConfirmModal open={pendingCancel} title={pendingCancel ? `Cancelar reserva #${pendingCancel.id}?` : ''} description="O cancelamento só é permitido com mais de 72 horas de antecedência do check-in." confirmLabel="Confirmar cancelamento" busyLabel="Cancelando..." saving={saving} onConfirm={() => cancelBooking(pendingCancel.id)} onClose={() => setPendingCancel(null)} />
+      <PaymentModal booking={pendingPayment} saving={saving} onConfirm={payBooking} onClose={closePayment} />
+      <ConfirmModal open={pendingCancel} title={pendingCancel ? (pendingCancel.hotelName ? `Cancelar reserva no hotel ${pendingCancel.hotelName}?` : 'Cancelar reserva no hotel?') : ''} description="O cancelamento só é permitido com mais de 72 horas de antecedência do check-in." confirmLabel="Confirmar cancelamento" busyLabel="Cancelando..." saving={saving} onConfirm={() => cancelBooking(pendingCancel.id)} onClose={() => setPendingCancel(null)} />
       <ConfirmModal open={confirmDelete} title="Excluir sua conta?" description="Seus dados serão removidos e esta ação não poderá ser desfeita." confirmLabel="Sim, excluir conta" busyLabel="Excluindo..." saving={saving} onConfirm={deleteAccount} onClose={() => setConfirmDelete(false)} />
     </div>
   );

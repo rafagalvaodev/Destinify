@@ -73,7 +73,11 @@ public class HotelController {
     public ResponseEntity<Page<HotelResponse>> findHotelByName(
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String city,
+            @RequestParam(required = false) Integer guests,
+            @RequestParam(required = false) Integer rooms,
+            @RequestParam(required = false) java.time.LocalDate startDate,
+            @RequestParam(required = false) java.time.LocalDate endDate,
             Pageable pageable) {
-        return ResponseEntity.ok(hotelService.findByNameAndOrCity(name, city, pageable));
+        return ResponseEntity.ok(hotelService.search(name, city, guests, rooms, startDate, endDate, pageable));
     }
 }

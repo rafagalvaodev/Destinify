@@ -16,6 +16,10 @@ export default function HotelCard({ hotel, onSelect }) {
         </div>
         <h3 className="card__name">{hotel.name}</h3>
         <p className="card__location">{hotel.city}</p>
+        {hotel.suggestedRooms?.length > 0 && <p>
+          {hotel.suggestedRooms.length} quarto(s) sugerido(s) · Capacidade para até{' '}
+          {hotel.suggestedRooms.reduce((total, room) => total + room.maxCapacity, 0)} hóspedes
+        </p>}
         <button className="hotel-card__open" type="button" aria-label={`Ver quartos de ${hotel.name}`} onClick={() => onSelect(hotel)} />
       </section>
     </article>

@@ -27,3 +27,13 @@ test('erro HTTP não é tratado como resultado vazio', async (context) => {
   context.mock.method(globalThis, 'fetch', async () => new Response(null, { status: 500 }));
   await assert.rejects(getCatalog(hotelsPath()), /HTTP 500/);
 });
+
+test('busca envia hóspedes, mínimo de quartos e período junto com a paginação', () => {
+  const url = new URL(hotelsPath({ guests: 5, rooms: 1, startDate: '2027-01-10', endDate: '2027-01-12', page: 2 }), 'http://test');
+  assert.equal(url.pathname, '/hotels/search');
+  assert.equal(url.searchParams.get('guests'), '5');
+  assert.equal(url.searchParams.get('rooms'), '1');
+  assert.equal(url.searchParams.get('startDate'), '2027-01-10');
+  assert.equal(url.searchParams.get('endDate'), '2027-01-12');
+  assert.equal(url.searchParams.get('page'), '2');
+});
