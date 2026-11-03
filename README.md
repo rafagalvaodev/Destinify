@@ -137,7 +137,7 @@ Em outro terminal, a partir da raiz:
 
 ```bash
 cd frontend
-npm ci ou npm install 
+npm ci ou npm install
 npm run dev
 ```
 

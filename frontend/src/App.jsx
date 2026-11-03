@@ -13,7 +13,7 @@ function App() {
   // Abre o catálogo público e processa retornos do Google quando necessário.
   const [paginaAtual, setPaginaAtual] = useState(() => {
     const ticket = new URLSearchParams(window.location.hash.slice(1)).get('googleTicket');
-    
+
     return ticket ? 'checking' : 'home';
   });
 
@@ -107,7 +107,7 @@ function App() {
       {paginaAtual === 'home' && (
         <Homepage setPaginaAtual={setPaginaAtual} onBookingCreated={openBookingPayment} />
       )}
-      
+
       {paginaAtual === 'login' && (
         <Login setPaginaAtual={setPaginaAtual} />
       )}
