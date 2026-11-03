@@ -13,7 +13,9 @@ export async function apiRequest(path, options = {}) {
 
   if (!response.ok) {
     const body = await response.json().catch(() => null);
-    throw new Error(body?.message || body?.error || 'Não foi possível concluir a solicitação.');
+    const error = new Error(body?.message || body?.error || 'Não foi possível concluir a solicitação.');
+    error.status = response.status;
+    throw error;
   }
 
   return response.status === 204 ? null : response.json();

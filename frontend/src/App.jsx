@@ -4,16 +4,17 @@ import Login from './pages/Login/Login';
 import Register from './pages/Register/Register';
 import UserPanel from './user/UserPanel';
 import Admin from './admin/Admin';
+import Homepage from './pages/Homepage/Homepage';
 
 function App() {
+  const [paymentBooking, setPaymentBooking] = useState(null);
   const googleExchange = React.useRef(null);
 
-  // O estado inicial é a tela de 'login'
+  // Abre o catálogo público e processa retornos do Google quando necessário.
   const [paginaAtual, setPaginaAtual] = useState(() => {
-    const token = localStorage.getItem('accessToken');
     const ticket = new URLSearchParams(window.location.hash.slice(1)).get('googleTicket');
-    
-    return token || ticket ? 'checking' : 'login';
+
+    return ticket ? 'checking' : 'home';
   });
 
   React.useEffect(() => {
@@ -50,13 +51,13 @@ function App() {
         const headers = { Authorization: `Bearer ${token}` };
         const adminResponse = await fetch('http://localhost:8080/api/users/all-users', { headers });
         if (adminResponse.ok) {
-          if (active) setPaginaAtual('admin');
+          if (active) setPaginaAtual('home');
           return;
         }
         if (adminResponse.status === 403) {
           const userResponse = await fetch('http://localhost:8080/api/users/me', { headers });
           if (userResponse.ok) {
-            if (active) setPaginaAtual('userPanel');
+            if (active) setPaginaAtual('home');
             return;
           }
         }
@@ -79,7 +80,7 @@ function App() {
   }, [paginaAtual]);
 
   React.useEffect(() => {
-    if (paginaAtual !== 'userPanel') return;
+    if (paginaAtual !== 'userPanel' || paymentBooking) return;
     let active = true;
     fetch('http://localhost:8080/api/users/all-users', {
       headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` },
@@ -87,11 +88,26 @@ function App() {
       if (active && response.ok) setPaginaAtual('admin');
     }).catch(() => {});
     return () => { active = false; };
-  }, [paginaAtual]);
+  }, [paginaAtual, paymentBooking]);
+
+  function leaveAccount(page) {
+    setPaymentBooking(null);
+    setPaginaAtual(page);
+  }
+
+  function openBookingPayment(booking) {
+    setPaymentBooking(booking);
+    setPaginaAtual('userPanel');
+    window.scrollTo({ top: 0 });
+  }
 
   return (
     <div>
-      {/* Exibe o Login ou o Registro dependendo do estado atual */}
+      {paginaAtual === 'checking' && <p role="status">Concluindo login…</p>}
+      {paginaAtual === 'home' && (
+        <Homepage setPaginaAtual={setPaginaAtual} onBookingCreated={openBookingPayment} />
+      )}
+
       {paginaAtual === 'login' && (
         <Login setPaginaAtual={setPaginaAtual} />
       )}
@@ -101,7 +117,7 @@ function App() {
       )}
 
       {paginaAtual === 'userPanel' && (
-        <UserPanel setPaginaAtual={setPaginaAtual} />
+        <UserPanel setPaginaAtual={leaveAccount} paymentBooking={paymentBooking} onPaymentClosed={() => setPaymentBooking(null)} />
       )}
       {paginaAtual === 'admin' && <Admin setPaginaAtual={setPaginaAtual} />}
     </div>

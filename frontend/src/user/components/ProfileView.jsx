@@ -1,4 +1,5 @@
 import './ProfileView.css';
+import AccountIcon from './AccountIcon';
 import { formatDate } from '../api/userApi';
 
 export default function ProfileView({ user, profile, setProfile, password, setPassword, saving, onSaveProfile, onChangePassword, onDelete }) {
@@ -11,21 +12,21 @@ export default function ProfileView({ user, profile, setProfile, password, setPa
       </div>
       <div className="profile-settings-grid">
         <form className="profile-form" onSubmit={onSaveProfile}>
-          <div className="section-heading"><span className="section-number">01</span><div><h2>Dados pessoais</h2><p>Informações usadas na sua conta e nas reservas.</p></div></div>
+          <div className="section-heading"><span className="profile-section-icon"><AccountIcon name="user" /></span><div><h2>Dados pessoais</h2><p>Informações usadas na sua conta e nas reservas.</p></div></div>
           <div className="profile-fields">
-            <label>Nome completo<input value={profile.name} onChange={(event) => setProfile({ ...profile, name: event.target.value })} required /></label>
-            <label>E-mail<input type="email" value={profile.email} onChange={(event) => setProfile({ ...profile, email: event.target.value })} required /></label>
+            <label>Nome completo<input autoComplete="name" value={profile.name} onChange={(event) => setProfile({ ...profile, name: event.target.value })} required /></label>
+            <label>E-mail<input autoComplete="email" type="email" value={profile.email} onChange={(event) => setProfile({ ...profile, email: event.target.value })} required /></label>
             <label>Data de nascimento<input type="date" value={profile.birthDate} onChange={(event) => setProfile({ ...profile, birthDate: event.target.value })} required /></label>
             <label>Tipo de conta<input value={user?.role === 'ADMIN' ? 'Administrador' : 'Cliente'} disabled /></label>
           </div>
           <div className="form-actions"><button className="primary-button" disabled={saving}>{saving ? 'Salvando...' : 'Salvar dados'}</button></div>
         </form>
         <form className="profile-form security-profile-form" onSubmit={onChangePassword}>
-          <div className="section-heading"><span className="section-number">02</span><div><h2>Senha e acesso</h2><p>Atualize sua senha regularmente para proteger a conta.</p></div></div>
+          <div className="section-heading"><span className="profile-section-icon"><AccountIcon name="lock" /></span><div><h2>Senha e acesso</h2><p>Atualize sua senha regularmente para proteger a conta.</p></div></div>
           <div className="profile-fields">
-            <label>Senha atual<input type="password" value={password.currentPassword} onChange={(event) => setPassword({ ...password, currentPassword: event.target.value })} required /></label>
-            <label>Nova senha<input type="password" minLength="8" value={password.newPassword} onChange={(event) => setPassword({ ...password, newPassword: event.target.value })} required /></label>
-            <label>Confirmar nova senha<input type="password" minLength="8" value={password.confirmNewPassword} onChange={(event) => setPassword({ ...password, confirmNewPassword: event.target.value })} required /></label>
+            <label>Senha atual<input autoComplete="current-password" type="password" value={password.currentPassword} onChange={(event) => setPassword({ ...password, currentPassword: event.target.value })} required /></label>
+            <label>Nova senha<input autoComplete="new-password" type="password" minLength="8" value={password.newPassword} onChange={(event) => setPassword({ ...password, newPassword: event.target.value })} required /></label>
+            <label>Confirmar nova senha<input autoComplete="new-password" type="password" minLength="8" value={password.confirmNewPassword} onChange={(event) => setPassword({ ...password, confirmNewPassword: event.target.value })} required /></label>
           </div>
           <div className="form-actions"><button className="primary-button" disabled={saving}>{saving ? 'Alterando...' : 'Atualizar senha'}</button></div>
         </form>

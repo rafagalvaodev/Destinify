@@ -1,8 +1,8 @@
 .account-page {
   min-height: 100vh;
-  display: grid;
-  grid-template-columns: 230px minmax(0, 1fr);
-  background: #f5f6fa;
+  display: flex;
+  flex-direction: column;
+  background: #fbf9ff;
   color: #202033;
   font-family: 'Arima Madurai', sans-serif;
 }
@@ -10,7 +10,10 @@
 .account-content {
   box-sizing: border-box;
   width: 100%;
-  padding: 42px clamp(24px, 4vw, 64px);
+  max-width: 1200px;
+  margin: 0 auto;
+  flex: 1;
+  padding: 40px 20px;
 }
 .account-header {
   display: flex;
@@ -126,3 +129,22 @@ button:disabled {
     padding: 22px 18px;
   }
 }
+
+.account-page .primary-button { background: #211c84; }
+.account-page .primary-button:hover { background: #3932a8; }
+.account-page .account-panel { border-radius: 16px; }
+.account-page .footer { padding: 40px max(20px, calc((100% - 1160px) / 2)); }
+@media (max-width: 700px) {
+  .account-page .footer__info { gap: 20px; grid-template-columns: 1fr; }
+  .account-page .footer__links { text-align: left; }
+}
+
+/* Conteúdo da conta com cards independentes e mais espaço para leitura. */
+.account-page { font-family: Arial, Helvetica, sans-serif; }
+.account-page .account-content { padding-top: 36px; padding-bottom: 64px; }
+.account-page .account-panel { padding: 0; border: 0; background: transparent; box-shadow: none; }
+.account-page .section-heading { margin-bottom: 28px; }
+.account-page .section-heading h2 { color: #302448; font-size: 23px; letter-spacing: -.5px; }
+.account-page .section-heading p { color: #82788f; font-size: 14px; line-height: 1.7; }
+.account-page .primary-button, .account-page .secondary-button, .account-page .danger-button { border-radius: 10px; font-size: 13px; min-height: 44px; padding: 10px 20px; }
+.account-page .account-brand { font-family: 'Arima', cursive; }

@@ -23,6 +23,12 @@ public class BookingController {
     @Autowired
     private BookingService bookingService;
 
+    @PostMapping("/summary")
+    public ResponseEntity<com.maisprati.destinify.backend.domain.dto.BookingDTO.BookingSummary> summary(
+            @Valid @RequestBody BookingCreate request) {
+        return ResponseEntity.ok(bookingService.summary(request));
+    }
+
     @PostMapping
     public ResponseEntity<BookingResponse> createBooking(
             @Valid @RequestBody BookingCreate bookingCreate,

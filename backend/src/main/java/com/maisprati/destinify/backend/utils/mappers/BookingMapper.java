@@ -37,7 +37,9 @@ public class BookingMapper {
                 booking.getGuestsCount(),
                 booking.getTotalPrice(),
                 booking.getStatus(),
-                booking.getCreatedAt()
+                booking.getCreatedAt(),
+                booking.getAdultsCount(), List.copyOf(booking.getChildrenAges()),
+                booking.getBasePrice(), booking.getDiscountTotal(), List.copyOf(booking.getPromotions())
         );
     }
 }
