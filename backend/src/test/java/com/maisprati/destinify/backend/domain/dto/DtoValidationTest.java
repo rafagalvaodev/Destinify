@@ -1,5 +1,6 @@
 package com.maisprati.destinify.backend.domain.dto;
 
+import com.maisprati.destinify.backend.support.TestDataFactory;
 import com.maisprati.destinify.backend.domain.dto.BookingDTO.BookingCreate;
 import com.maisprati.destinify.backend.domain.dto.HotelDTO.HotelCreate;
 import com.maisprati.destinify.backend.domain.dto.HotelDTO.HotelUpdate;
@@ -66,20 +67,20 @@ class DtoValidationTest {
         @Test
         @DisplayName("é válido com todos os campos corretos")
         void valido() {
-            assertThat(validator.validate(new BookingCreate(1L, List.of(10L), checkIn, checkOut, 2))).isEmpty();
+            assertThat(validator.validate(TestDataFactory.bookingCreate(1L, List.of(10L), checkIn, checkOut, 2))).isEmpty();
         }
 
         @Test
         @DisplayName("hotelId é obrigatório")
         void hotelIdNulo() {
-            assertThat(mensagens(new BookingCreate(null, List.of(10L), checkIn, checkOut, 2)))
+            assertThat(mensagens(TestDataFactory.bookingCreate(null, List.of(10L), checkIn, checkOut, 2)))
                     .containsExactly("O id o hotel deve ser preenchido");
         }
 
         @Test
         @DisplayName("precisa de pelo menos um quarto")
         void semQuartos() {
-            assertThat(mensagens(new BookingCreate(1L, List.of(), checkIn, checkOut, 2)))
+            assertThat(mensagens(TestDataFactory.bookingCreate(1L, List.of(), checkIn, checkOut, 2)))
                     .containsExactly("Pelo menos um quarto deve ser selecionado");
         }
 
@@ -89,34 +90,34 @@ class DtoValidationTest {
             List<Long> ids = new java.util.ArrayList<>();
             ids.add(null); // List.of não aceita null, por isso ArrayList
 
-            assertThat(mensagens(new BookingCreate(1L, ids, checkIn, checkOut, 2)))
+            assertThat(mensagens(TestDataFactory.bookingCreate(1L, ids, checkIn, checkOut, 2)))
                     .containsExactly("O id do quarto deve ser preenchido");
         }
 
         @Test
         @DisplayName("check-in no passado é recusado")
         void checkInNoPassado() {
-            assertThat(mensagens(new BookingCreate(1L, List.of(10L), LocalDate.now().minusDays(1), checkOut, 2)))
+            assertThat(mensagens(TestDataFactory.bookingCreate(1L, List.of(10L), LocalDate.now().minusDays(1), checkOut, 2)))
                     .containsExactly("A data de check-in não pode ser no passado");
         }
 
         @Test
         @DisplayName("check-in hoje é aceito (@FutureOrPresent)")
         void checkInHojeEhAceito() {
-            assertThat(validator.validate(new BookingCreate(1L, List.of(10L), LocalDate.now(), checkOut, 2))).isEmpty();
+            assertThat(validator.validate(TestDataFactory.bookingCreate(1L, List.of(10L), LocalDate.now(), checkOut, 2))).isEmpty();
         }
 
         @Test
         @DisplayName("check-out hoje é recusado (@Future exige amanhã em diante)")
         void checkOutHojeEhRecusado() {
-            assertThat(mensagens(new BookingCreate(1L, List.of(10L), LocalDate.now(), LocalDate.now(), 2)))
+            assertThat(mensagens(TestDataFactory.bookingCreate(1L, List.of(10L), LocalDate.now(), LocalDate.now(), 2)))
                     .containsExactly("A data de check-out deve ser no futuro");
         }
 
         @Test
         @DisplayName("datas nulas são recusadas")
         void datasNulas() {
-            assertThat(mensagens(new BookingCreate(1L, List.of(10L), null, null, 2)))
+            assertThat(mensagens(TestDataFactory.bookingCreate(1L, List.of(10L), null, null, 2)))
                     .containsExactlyInAnyOrder(
                             "A data de check-in deve ser preenchida",
                             "A data de check-out deve ser preenchida");
@@ -125,9 +126,9 @@ class DtoValidationTest {
         @Test
         @DisplayName("hóspedes deve ser maior que zero e obrigatório")
         void hospedesInvalidos() {
-            assertThat(mensagens(new BookingCreate(1L, List.of(10L), checkIn, checkOut, 0)))
+            assertThat(mensagens(TestDataFactory.bookingCreate(1L, List.of(10L), checkIn, checkOut, 0)))
                     .containsExactly("A quantidade de hóspedes deve ser maior que zero");
-            assertThat(mensagens(new BookingCreate(1L, List.of(10L), checkIn, checkOut, null)))
+            assertThat(mensagens(TestDataFactory.bookingCreate(1L, List.of(10L), checkIn, checkOut, null)))
                     .containsExactly("A quantidade de hóspedes deve ser preenchida");
         }
     }

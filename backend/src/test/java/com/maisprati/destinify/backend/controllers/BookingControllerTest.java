@@ -32,6 +32,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -70,8 +71,8 @@ public class BookingControllerTest {
     private final User admin = TestDataFactory.admin(9L);
 
     private BookingResponse bookingResponse() {
-        return new BookingResponse(55L, 1L, "Maria Cliente", 10L, "Hotel Central", List.of(),
-                LocalDate.now().plusDays(10), LocalDate.now().plusDays(13), 2, 300f, BookingStatus.PENDING, null);
+        return TestDataFactory.bookingResponse(55L, 1L, "Maria Cliente", 10L, "Hotel Central", List.of(),
+                LocalDate.now().plusDays(10), LocalDate.now().plusDays(13), 2, new BigDecimal("300.00"), BookingStatus.PENDING, null);
     }
 
     private String createJson(LocalDate checkIn, LocalDate checkOut, int guests) {
@@ -102,7 +103,7 @@ public class BookingControllerTest {
             ArgumentCaptor<BookingCreate> dto = ArgumentCaptor.forClass(BookingCreate.class);
             ArgumentCaptor<User> usuario = ArgumentCaptor.forClass(User.class);
             verify(bookingService).newBooking(dto.capture(), usuario.capture());
-            assertThat(dto.getValue()).isEqualTo(new BookingCreate(10L, List.of(100L, 101L), in, out, 2));
+            assertThat(dto.getValue()).isEqualTo(TestDataFactory.bookingCreate(10L, List.of(100L, 101L), in, out, 2));
             assertThat(usuario.getValue().getId()).isEqualTo(1L); // veio do login
         }
 
@@ -254,7 +255,7 @@ public class BookingControllerTest {
                     .content("{\"guestsCount\":2}"))
                 .andExpect(status().isOk());
 
-            verify(bookingService).updateBooking(any(User.class), eq(55L), eq(new BookingUpdate(null, null, 2)));
+            verify(bookingService).updateBooking(any(User.class), eq(55L), eq(TestDataFactory.bookingUpdate(null, null, 2)));
         }
 
         @Test

@@ -104,6 +104,10 @@ public class SecurityConfig {
                             request.requestMatchers(HttpMethod.GET,
                                     "/api/bookings/all").hasRole("ADMIN");
 
+                            // Webhook do PagBank: O PagBank não tem o nosso JWT. A proteção é a assinatura
+                            // (x-authenticity-token), conferida pelo PagBankWebookSignature.
+                            request.requestMatchers(HttpMethod.POST, "/api/payments/pagbank/webhook").permitAll();
+
                             request.anyRequest().authenticated();
                         })
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))

@@ -98,4 +98,21 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(status).body(error);
     }
+
+    @ExceptionHandler(PaymentGatewayException.class)
+    public ResponseEntity<ApiError> handlePaymentGateway(
+            PaymentGatewayException exception,
+            HttpServletRequest request) {
+
+        HttpStatus status = HttpStatus.BAD_GATEWAY;
+        ApiError error = new ApiError(
+                Instant.now(),
+                status.value(),
+                status.getReasonPhrase(),
+                exception.getMessage(),
+                request.getRequestURI()
+        );
+
+        return ResponseEntity.status(status).body(error);
+    }
 }

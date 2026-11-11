@@ -4,17 +4,21 @@ import com.maisprati.destinify.backend.domain.Booking;
 import com.maisprati.destinify.backend.domain.Hotel;
 import com.maisprati.destinify.backend.domain.Room;
 import com.maisprati.destinify.backend.domain.User;
+import com.maisprati.destinify.backend.domain.dto.BookingDTO.BookingCreate;
+import com.maisprati.destinify.backend.domain.dto.BookingDTO.BookingResponse;
+import com.maisprati.destinify.backend.domain.dto.BookingDTO.BookingUpdate;
+import com.maisprati.destinify.backend.domain.dto.RoomDTO.RoomResponse;
 import com.maisprati.destinify.backend.domain.enums.BookingStatus;
 import com.maisprati.destinify.backend.domain.enums.Role;
 import com.maisprati.destinify.backend.domain.enums.RoomStatus;
 import com.maisprati.destinify.backend.domain.enums.RoomType;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-// FÁBRICA DE DADOS DE TESTE (padrão conhecido como "Object Mother").
 
 public final class TestDataFactory {
 
@@ -55,9 +59,31 @@ public final class TestDataFactory {
         booking.setCheckInDate(checkIn);
         booking.setCheckOutDate(checkOut);
         booking.setGuestsCount(1);
-        booking.setTotalPrice(300f);
+        booking.setTotalPrice(new BigDecimal("300.00"));
         booking.setStatus(status);
         booking.setCreatedAt(LocalDateTime.now());
         return booking;
+    }
+
+
+    // Reserva "simples": só o total de hóspedes; adultos e crianças ficam nulos (o service calcula).
+    public static BookingCreate bookingCreate(Long hotelId, List<Long> roomIds,
+                                              LocalDate checkIn, LocalDate checkOut, Integer guests) {
+        return new BookingCreate(hotelId, roomIds, checkIn, checkOut, guests, null, null);
+    }
+
+    // Atualização parcial: datas e/ou total de hóspedes.
+    public static BookingUpdate bookingUpdate(LocalDate checkIn, LocalDate checkOut, Integer guests) {
+        return new BookingUpdate(checkIn, checkOut, guests, null, null);
+    }
+
+    // Resposta de reserva sem promoções: preço base = total, desconto zero.
+    public static BookingResponse bookingResponse(Long id, Long userId, String userName,
+                                                  Long hotelId, String hotelName, List<RoomResponse> rooms,
+                                                  LocalDate checkIn, LocalDate checkOut, Integer guests,
+                                                  BigDecimal total, BookingStatus status, LocalDateTime createdAt) {
+        return new BookingResponse(id, userId, userName, hotelId, hotelName, rooms,
+                checkIn, checkOut, guests, total, status, createdAt,
+                guests, List.of(), total, BigDecimal.ZERO, List.of());
     }
 }

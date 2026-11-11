@@ -6,6 +6,7 @@ import com.maisprati.destinify.backend.domain.Room;
 import com.maisprati.destinify.backend.domain.User;
 import com.maisprati.destinify.backend.domain.dto.BookingDTO.BookingCreate;
 import com.maisprati.destinify.backend.domain.dto.BookingDTO.BookingResponse;
+import com.maisprati.destinify.backend.domain.dto.BookingDTO.BookingSummary;
 import com.maisprati.destinify.backend.domain.dto.BookingDTO.BookingUpdate;
 import com.maisprati.destinify.backend.domain.enums.BookingStatus;
 import com.maisprati.destinify.backend.domain.enums.RoomType;
@@ -37,6 +38,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -68,6 +70,9 @@ class BookingServiceTest {
     @Mock
     private PaymentService paymentService;
 
+    @Mock
+    private PromotionService promotionService;
+
     @InjectMocks
     private BookingService bookingService;
 
@@ -88,17 +93,24 @@ class BookingServiceTest {
         suite = TestDataFactory.room(101L, hotel, RoomType.SUITE, 200f);
         checkIn = LocalDate.now().plusDays(10);
         checkOut = LocalDate.now().plusDays(13); // 3 noites
-        response = new BookingResponse(55L, 1L, "Maria Cliente", 10L, "Hotel Central", List.of(),
-                checkIn, checkOut, 1, 300f, BookingStatus.PENDING, null);
+        response = TestDataFactory.bookingResponse(55L, 1L, "Maria Cliente", 10L, "Hotel Central", List.of(),
+                checkIn, checkOut, 1, new BigDecimal("300"), BookingStatus.PENDING, null);
     }
 
     private BookingCreate createDto(Long hotelId, List<Long> roomIds, int guests) {
-        return new BookingCreate(hotelId, roomIds, checkIn, checkOut, guests);
+        return TestDataFactory.bookingCreate(hotelId, roomIds, checkIn, checkOut, guests);
+    }
+
+    private BookingSummary summary(String base, String discount, String total) {
+        return new BookingSummary(3, 1, List.of(),
+                new BigDecimal(base), new BigDecimal(discount), new BigDecimal(total), List.of(),
+                "Cancelamento permitido com mais de 72 horas de antecêdencia do check-in às 14h.",
+                10L, "Hotel Central", checkIn, checkOut, List.of(100L));
     }
 
     private Booking pendingBookingOf(User owner) {
         Booking booking = TestDataFactory.booking(55L, owner, hotel, List.of(single), checkIn, checkOut, BookingStatus.PENDING);
-        booking.setTotalPrice(300f);
+        booking.setTotalPrice(new BigDecimal("300.00"));
         return booking;
     }
 
@@ -118,6 +130,8 @@ class BookingServiceTest {
                     .thenReturn(List.of());
             // thenAnswer: em vez de um valor fixo, calculamos a resposta. Aqui simulamos o banco:
             // devolve a mesma reserva, mas já com id (como o INSERT faria).
+            when(promotionService.calculate(List.of(single), checkIn, checkOut, 1, null, null))
+                    .thenReturn(summary("330.00", "30.00", "300.00"));
             when(bookingRepository.save(any(Booking.class))).thenAnswer(invocation -> {
                 Booking b = invocation.getArgument(0);
                 b.setId(55L);
@@ -141,8 +155,12 @@ class BookingServiceTest {
             assertThat(saved.getCheckInDate()).isEqualTo(checkIn);
             assertThat(saved.getCheckOutDate()).isEqualTo(checkOut);
             assertThat(saved.getGuestsCount()).isEqualTo(1);
-            assertThat(saved.getTotalPrice()).isEqualTo(300f);  // 100 por noite x 3 noites
+            
             assertThat(saved.getStatus()).isEqualTo(BookingStatus.PENDING);
+
+            assertThat(saved.getBasePrice()).isEqualByComparingTo("330.00");
+            assertThat(saved.getDiscountTotal()).isEqualByComparingTo("30.00");
+            assertThat(saved.getTotalPrice()).isEqualByComparingTo("300.00");
 
             // Assert 3: ORDEM -> primeiro salva a reserva, depois cria o pagamento com o id gerado
             InOrder ordem = inOrder(bookingRepository, paymentService);
@@ -185,7 +203,7 @@ class BookingServiceTest {
         @ValueSource(ints = {0, -1})
         @DisplayName("recusa quando o check-out não é posterior ao check-in")
         void checkOutNaoPosterior_lancaConflito(int diasDepoisDoCheckIn) {
-            BookingCreate dto = new BookingCreate(10L, List.of(100L), checkIn, checkIn.plusDays(diasDepoisDoCheckIn), 1);
+            BookingCreate dto = TestDataFactory.bookingCreate(10L, List.of(100L), checkIn, checkIn.plusDays(diasDepoisDoCheckIn), 1);
 
             assertThatThrownBy(() -> bookingService.newBooking(dto, user))
                     .isInstanceOf(BookingConflictException.class)
@@ -329,7 +347,7 @@ class BookingServiceTest {
             Booking booking = pendingBookingOf(user);
             LocalDate novoCheckIn = LocalDate.now().plusDays(20);
             LocalDate novoCheckOut = LocalDate.now().plusDays(25); // 5 noites
-            BookingUpdate dto = new BookingUpdate(novoCheckIn, novoCheckOut, null);
+            BookingUpdate dto = TestDataFactory.bookingUpdate(novoCheckIn, novoCheckOut, null);
 
             when(bookingRepository.findById(55L)).thenReturn(Optional.of(booking));
             when(roomRepository.findByIdForUpdate(100L)).thenReturn(Optional.of(single));
@@ -353,7 +371,7 @@ class BookingServiceTest {
         @DisplayName("atualização parcial: só guestsCount mantém as datas antigas")
         void soGuestsCount_mantemDatas() {
             Booking booking = pendingBookingOf(user);
-            BookingUpdate dto = new BookingUpdate(null, null, 1);
+            BookingUpdate dto = TestDataFactory.bookingUpdate(null, null, 1);
 
             when(bookingRepository.findById(55L)).thenReturn(Optional.of(booking));
             when(roomRepository.findByIdForUpdate(100L)).thenReturn(Optional.of(single));
@@ -376,7 +394,7 @@ class BookingServiceTest {
             Booking booking = pendingBookingOf(TestDataFactory.client(2L));
             when(bookingRepository.findById(55L)).thenReturn(Optional.of(booking));
 
-            assertThatThrownBy(() -> bookingService.updateBooking(user, 55L, new BookingUpdate(null, null, 1)))
+            assertThatThrownBy(() -> bookingService.updateBooking(user, 55L, TestDataFactory.bookingUpdate(null, null, 1)))
                     .isInstanceOfSatisfying(ResponseStatusException.class,
                             ex-> assertThat(ex.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN));
 
@@ -390,7 +408,7 @@ class BookingServiceTest {
             booking.setStatus(BookingStatus.CONFIRMED);
             when(bookingRepository.findById(55L)).thenReturn(Optional.of(booking));
 
-            assertThatThrownBy(() -> bookingService.updateBooking(user, 55L, new BookingUpdate(null, null, 1)))
+            assertThatThrownBy(() -> bookingService.updateBooking(user, 55L, TestDataFactory.bookingUpdate(null, null, 1)))
                     .isInstanceOf(BookingConflictException.class)
                     .hasMessage("Só é possível editar reservas pendentes.");
         }
@@ -400,7 +418,7 @@ class BookingServiceTest {
         void datasInvalidas_lancaConflito() {
             Booking booking = pendingBookingOf(user);
             // só o check-out vem no DTO e cai antes do check-in existente
-            BookingUpdate dto = new BookingUpdate(null, LocalDate.now().plusDays(5), null);
+            BookingUpdate dto = TestDataFactory.bookingUpdate(null, LocalDate.now().plusDays(5), null);
             when(bookingRepository.findById(55L)).thenReturn(Optional.of(booking));
 
             assertThatThrownBy(() -> bookingService.updateBooking(user, 55L, dto))
@@ -414,7 +432,7 @@ class BookingServiceTest {
         @DisplayName("recusa quando o quarto já está reservado no novo período")
         void novoPeriodoComSobreposicao_lancaConflito() {
             Booking booking = pendingBookingOf(user);
-            BookingUpdate dto = new BookingUpdate(null, null, 1);
+            BookingUpdate dto = TestDataFactory.bookingUpdate(null, null, 1);
             Booking outraReserva = pendingBookingOf(TestDataFactory.client(2L));
 
             when(bookingRepository.findById(55L)).thenReturn(Optional.of(booking));
@@ -434,7 +452,7 @@ class BookingServiceTest {
         @DisplayName("recusa quando o novo número de hóspedes excede a capacidade")
         void hospedesAcimaDaCapacidade_lancaConflito() {
             Booking booking = pendingBookingOf(user);   // quarto single: capacidade 1
-            BookingUpdate dto = new BookingUpdate(null, null, 5);
+            BookingUpdate dto = TestDataFactory.bookingUpdate(null, null, 5);
 
             when(bookingRepository.findById(55L)).thenReturn(Optional.of(booking));
             when(roomRepository.findByIdForUpdate(100L)).thenReturn(Optional.of(single));
@@ -452,7 +470,7 @@ class BookingServiceTest {
         void naoExiste_lancaNotFound() {
             when(bookingRepository.findById(55L)).thenReturn(Optional.empty());
 
-            assertThatThrownBy(() -> bookingService.updateBooking(user, 55L, new BookingUpdate(null, null, 1)))
+            assertThatThrownBy(() -> bookingService.updateBooking(user, 55L, TestDataFactory.bookingUpdate(null, null, 1)))
                     .isInstanceOf(BookingNotFoundException.class);
         }
     }

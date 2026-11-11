@@ -16,6 +16,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -46,7 +47,7 @@ class BookingMapperTest {
         Booking booking = TestDataFactory.booking(55L, user, hotel, List.of(room1, room2),
                 checkIn, checkOut, BookingStatus.PENDING);
         booking.setGuestsCount(3);
-        booking.setTotalPrice(900f);
+        booking.setTotalPrice(new BigDecimal("900.00"));
 
         // Act
         BookingResponse response = bookingMapper.bookingResponseMapper(booking);

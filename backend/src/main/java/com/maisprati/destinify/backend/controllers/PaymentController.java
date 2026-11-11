@@ -1,6 +1,7 @@
 package com.maisprati.destinify.backend.controllers;
 
 import com.maisprati.destinify.backend.domain.User;
+import com.maisprati.destinify.backend.domain.dto.PaymentDTO.CheckoutResponse;
 import com.maisprati.destinify.backend.domain.dto.PaymentDTO.PaymentResponse;
 import com.maisprati.destinify.backend.domain.enums.PaymentStatus;
 import com.maisprati.destinify.backend.servicies.PaymentService;
@@ -58,5 +59,13 @@ public class PaymentController {
         PaymentResponse pay = paymentService.pay(bookingId, loggedUser);
 
         return ResponseEntity.ok(pay);
+    }
+
+    @PostMapping("/{bookingId}/checkout")
+    public ResponseEntity<CheckoutResponse> checkout(
+            @PathVariable Long bookingId,
+            @AuthenticationPrincipal User loggedUser) {
+
+        return ResponseEntity.ok(paymentService.startCheckout(bookingId, loggedUser));
     }
 }

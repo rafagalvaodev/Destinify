@@ -69,7 +69,7 @@ class PaymentServiceTest {
         Room room = TestDataFactory.room(100L, hotel, RoomType.SINGLE, 100f);
         booking = TestDataFactory.booking(7L, owner, hotel, List.of(room),
                 LocalDate.now().plusDays(10), LocalDate.now().plusDays(13), BookingStatus.PENDING);
-        booking.setTotalPrice(350.5f);
+        booking.setTotalPrice(new BigDecimal("350.50"));
         response = new PaymentResponse(3L, 7L, new BigDecimal("350.50"), PaymentStatus.PENDING, LocalDateTime.now(), null);
     }
 
@@ -110,7 +110,7 @@ class PaymentServiceTest {
         void valorComTresCasas_arredondaParaCima() {
             // 100.125f é exatamente representável em float, então o teste é determinístico.
             // Com RoundingMode.DOWN daria 100.12; com HALF_UP (regra "comercial") dá 100.13.
-            booking.setTotalPrice(100.125f);
+            booking.setTotalPrice(new BigDecimal("120.125"));
             when(bookingRepository.findById(7L)).thenReturn(Optional.of(booking));
             when(paymentRepository.findFirstByBookingIdAndPaymentStatusOrderByCreatedAtDesc(7L, PaymentStatus.PENDING))
                     .thenReturn(Optional.empty());
@@ -349,7 +349,7 @@ class PaymentServiceTest {
         void atualizaValor() {
             Payment payment = pendingPayment();
             payment.setAmount(new BigDecimal("1.00")); // valor antigo
-            booking.setTotalPrice(500f);
+            booking.setTotalPrice(new BigDecimal("500.00"));
             when(paymentRepository.findFirstByBookingIdAndPaymentStatusOrderByCreatedAtDesc(7L, PaymentStatus.PENDING))
                     .thenReturn(Optional.of(payment));
 
