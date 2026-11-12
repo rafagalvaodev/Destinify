@@ -16,7 +16,7 @@ class CheckoutCriadoTest {
     void from_respostaCompleta_extraiIdELinkPay() {
         // Monta o mesmo formato do JSON do PagBank: a lista "links" tem vários itens; só o PAY nos interessa.
         Map<String, Object> resposta = Map.of(
-                "id", "CHECK_123",
+                "id", "CHEC_123",
                 "links", List.of(
                         Map.of("rel", "SELF", "href", "https://sandbox.api.pagseguro.com/checkouts/CHEC_123", "method", "GET"),
                         Map.of("rel", "PAY", "href", URL_PAGAMENTO, "method", "GET")));
@@ -35,7 +35,7 @@ class CheckoutCriadoTest {
 
         assertThatThrownBy(() -> CheckoutCriado.from(resposta))
                 .isInstanceOf(IllegalStateException.class)
-                .hasMessage("Resposta do PagBank sem o id do checkout");
+                .hasMessage("Resposta do PagBank sem o link PAY");
     }
 
     @Test
@@ -51,6 +51,6 @@ class CheckoutCriadoTest {
     void from_respostaNula_lancaExcecao() {
         assertThatThrownBy(() -> CheckoutCriado.from(null))
                 .isInstanceOf(IllegalStateException.class)
-                .hasMessage("Resposta vazia do PagBank");
+                .hasMessage("Resposta vazia do Pagbank");
     }
 }

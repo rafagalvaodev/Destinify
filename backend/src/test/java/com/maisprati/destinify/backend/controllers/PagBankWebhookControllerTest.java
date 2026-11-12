@@ -60,7 +60,7 @@ class PagBankWebhookControllerTest {
                 .content(CORPO))
             .andExpect(status().isOk());
 
-        verify(signature).valida(aryEq(CORPO.getBytes(StandardCharsets.UTF_8)), eq("acb123"));
+        verify(signature).valida(aryEq(CORPO.getBytes(StandardCharsets.UTF_8)), eq("abc123"));
     }
 
     @Test

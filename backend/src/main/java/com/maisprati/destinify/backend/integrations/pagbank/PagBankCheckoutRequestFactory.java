@@ -20,13 +20,13 @@ public class PagBankCheckoutRequestFactory {
 
     private static final List<String> MEIOS_DE_PAGAMENTO = List.of("CREDIT_CARD", "PIX", "BOLETO");
 
-    private static final DateTimeFormatter DATA_BR = DateTimeFormatter.ofPattern("dd/mm/yyyy");
+    private static final DateTimeFormatter DATA_BR = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     private final String redirectUrl;
     private final String notificationUrl;
 
     public PagBankCheckoutRequestFactory(
-            @Value("${pagbank.redirect-url:http//localhost:5173/pagamento/retorno}") String redirectUrl,
+            @Value("${pagbank.redirect-url:http://localhost:5173/pagamento/retorno}") String redirectUrl,
             @Value("${pagbank.notification-url:}") String notificationUrl) {
         this.redirectUrl = redirectUrl;
         this.notificationUrl = notificationUrl;
@@ -60,7 +60,7 @@ public class PagBankCheckoutRequestFactory {
 
         if (notificationUrl != null && !notificationUrl.isBlank()) {
             corpo.put("notification_urls", List.of(notificationUrl));
-            corpo.put("payment_notifications_urls", List.of(notificationUrl));
+            corpo.put("payment_notification_urls", List.of(notificationUrl));
         }
         return corpo;
     }

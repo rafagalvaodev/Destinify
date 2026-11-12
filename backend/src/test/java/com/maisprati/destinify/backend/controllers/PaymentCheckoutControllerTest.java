@@ -71,7 +71,7 @@ class PaymentCheckoutControllerTest {
 
         mockMvc.perform(post("/api/bookings/7/checkout").with(TestAuth.as(cliente)))
                 .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.message").value("Only pending reservation can receibe payment"));
+                .andExpect(jsonPath("$.message").value("Only pending reservations can receive payment"));
     }
 
     @Test

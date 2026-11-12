@@ -30,7 +30,7 @@ public class PagBankWebhookController {
      * @RequestHeader required=false: sem o cabeçalho a requisição não é rejeitada pelo Spring;
      * quem decidade é a validação da assinatura.
      */
-    @PostMapping("/Webhook")
+    @PostMapping("/webhook")
     public ResponseEntity<Void> receber(
             @RequestBody byte[] corpo,
             @RequestHeader(name = "x-authenticity-token", required = false) String assinaturaRecebida) {
@@ -52,6 +52,12 @@ public class PagBankWebhookController {
     }
 
     private static String prefixo(String hash) {
+
+        // Protege contra valores nulos ou vazios;
+        if (hash == null || hash.isBlank()) {
+            return "<indisponível>";
+        }
+
         String limpo = hash.trim();
         return limpo.length() <= 8 ? limpo : limpo.substring(0, 8) + "...";
     }

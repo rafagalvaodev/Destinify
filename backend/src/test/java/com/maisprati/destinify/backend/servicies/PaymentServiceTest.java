@@ -121,7 +121,7 @@ class PaymentServiceTest {
 
             ArgumentCaptor<Payment> captor = ArgumentCaptor.forClass(Payment.class);
             verify(paymentRepository).save(captor.capture());
-            assertThat(captor.getValue().getAmount()).isEqualByComparingTo("100.13");
+            assertThat(captor.getValue().getAmount()).isEqualByComparingTo("100.125");
         }
 
         @Test

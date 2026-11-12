@@ -14,11 +14,11 @@ public record CheckoutCriado(String id, String payUrl) {
         }
 
         if (!(resposta.get("id") instanceof String checkoutId)) {
-            throw new IllegalStateException("Resposta do PagBank sem o id do checkout");
+            throw new IllegalStateException("Resposta vazia do PagBank");
         }
 
         if (!(resposta.get("links") instanceof List<?> links)) {
-            throw new IllegalStateException("Resposta do PagBank sem a lista dos links");
+            throw new IllegalStateException("Resposta do PagBank sem a lista de links");
         }
 
         // Procura, na lista, o link cujo "rel" é "PAY"
