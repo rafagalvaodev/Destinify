@@ -51,6 +51,6 @@ class CheckoutCriadoTest {
     void from_respostaNula_lancaExcecao() {
         assertThatThrownBy(() -> CheckoutCriado.from(null))
                 .isInstanceOf(IllegalStateException.class)
-                .hasMessage("Resposta vazia do Pagbank");
+                .hasMessage("Resposta vazia do PagBank");
     }
 }

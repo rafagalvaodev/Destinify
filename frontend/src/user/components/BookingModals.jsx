@@ -50,13 +50,89 @@ export function BookingEditModal({ booking, values, setValues, saving, onSubmit,
 
 export function PaymentModal({ booking, saving, onConfirm, onClose }) {
   if (!booking) return null;
-  return <div className="modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && onClose()}><div className="booking-modal payment-modal" role="dialog" aria-modal="true" aria-labelledby="payment-title">
-    <div className="modal-heading"><div><small>Reserva #{booking.id}</small><h2 id="payment-title">Confirmar pagamento</h2></div><button type="button" aria-label="Fechar" onClick={onClose}>×</button></div>
-    <div className="payment-summary"><div><small>Hotel</small><strong>{booking.hotelName}</strong></div><div><small>Período</small><strong>{formatDate(booking.checkInDate)} a {formatDate(booking.checkOutDate)}</strong></div><div className="payment-total"><small>Valor total</small><strong>{formatCurrency(booking.totalPrice)}</strong></div></div>
-    <BookingDiscounts booking={booking} />
-    <p className="payment-note">Ao confirmar, o pagamento será processado e a reserva passará para o status confirmado.</p>
-    <div className="modal-actions"><button className="secondary-button" type="button" onClick={onClose} disabled={saving}>Cancelar</button><button className="primary-button" type="button" onClick={() => onConfirm(booking.id)} disabled={saving}>{saving ? 'Processando...' : 'Confirmar pagamento'}</button></div>
-  </div></div>;
+  
+  return (
+    <div
+    className="modal-backdrop"
+    role="presentation"
+    onMouseDown={(event) =>
+      event.target === event.currentTarget && onClose()
+    }
+    >
+      <div
+      className="booking-modal payment-modal"
+      role="dialog"
+      arial-modal="true"
+      aria-labelledby="payment-title"
+      >
+        <div className="modal-heading">
+          <div>
+            <small>Reserva #{booking.id}</small>
+            <h2 id="payment-title">Pagamento da Reserva</h2>
+          </div>
+
+          <button
+          tpye="button"
+          arial-label="Fechar"
+          onClick={onClose}
+          >
+            x
+          </button>
+        </div>
+
+        <div className="payment-summary">
+          <div>
+            <small>Hotel</small>
+            <strong>{booking.hotelName}</strong>
+          </div>
+
+          <div>
+            <small>Período</small>
+            <strong>
+              {formatDate(booking.checkInDate)} a
+              {' '}
+              {formateDate(booking.checkOutDate)}
+            </strong>
+          </div>
+
+          <div className="payment-total">
+            <small>Valor total</small>
+            <strong>{formatCurrency(booking.totalPrice)}</strong>
+          </div>
+        </div>
+
+        <BookingDiscounts booking={booking}/>
+
+        <p className="payment-note">
+          Você será redirecionado ao ambiente serguro do PagBank
+          para concluir o pagamento. A reserva só será confirmada
+          depois que o pagamento for validado pelo nosso servidor.
+        </p>
+
+        <div className="modal-actions">
+          <button
+          className="secondary-button"
+          type="button"
+          onClick={onClose}
+          disabled={saving}
+          >
+            Cancelar
+            </button>
+
+            <button
+            className="primary-button"
+            type="button"
+            onClick={() => onConfirm(booking.id)}
+            disabled={saving}
+            >
+              {saving
+                ? 'Conectando ao PagBank...'
+                : 'Continuar para pagamento'} 
+            </button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export function ConfirmModal({ open, title, description, confirmLabel, busyLabel, saving, onConfirm, onClose }) {

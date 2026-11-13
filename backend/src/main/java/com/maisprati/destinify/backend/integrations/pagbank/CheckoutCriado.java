@@ -10,7 +10,7 @@ public record CheckoutCriado(String id, String payUrl) {
         // Lê a resposta do PagBank, se algo essencial faltar, lança IllegalStateException
 
         if (resposta == null) {
-            throw new IllegalStateException("Resposta vazia do Pagbank");
+            throw new IllegalStateException("Resposta vazia do PagBank");
         }
 
         if (!(resposta.get("id") instanceof String checkoutId)) {

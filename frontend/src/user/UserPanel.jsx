@@ -125,9 +125,21 @@ export default function UserPanel({ setPaginaAtual, paymentBooking = null, onPay
 
   function payBooking(id) {
     runAction(async () => {
-      await apiRequest(`/bookings/${id}/pay`, { method: 'POST' });
-      setBookings((current) => current.map((booking) => booking.id === id ? { ...booking, status: 'CONFIRMED' } : booking));
-      closePayment();
+      // Solicita ao backend a criação ou recuperação
+      // de um checkout válido para esta reserva.
+      const checkout = await apiRequest(
+        `/bookings/${id}/checkout`,
+        {
+          method: 'POST'
+        }
+      );
+
+      // O backend devolve o link PAY do Pagbank e redireciona o usuário para o ambiente
+      if (!checkout.checkoutUrl) {
+        throw new Error('O PagBank não retornou o link de pagamento.');
+      }
+
+      window.location.assign(checkout.checkoutUrl);
     });
   }
 

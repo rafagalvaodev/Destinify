@@ -108,6 +108,13 @@ class BookingServiceTest {
                 10L, "Hotel Central", checkIn, checkOut, List.of(100L));
     }
 
+    private BookingSummary summaryForBooking(long nights, int adults, List<Integer> children, String base, String discount, String total, LocalDate start, LocalDate end, List<Long> roomIds) {
+        return new BookingSummary(nights, adults, children, new BigDecimal(base), new BigDecimal(discount), new BigDecimal(total),
+                List.of(), "Cancelamento permitido com mais de 72 horas de antecedência.", 10L,
+                "Hotel Central", start, end, roomIds
+        );
+    }
+
     private Booking pendingBookingOf(User owner) {
         Booking booking = TestDataFactory.booking(55L, owner, hotel, List.of(single), checkIn, checkOut, BookingStatus.PENDING);
         booking.setTotalPrice(new BigDecimal("300.00"));
@@ -178,8 +185,17 @@ class BookingServiceTest {
             doReturn(Optional.of(suite)).when(roomRepository).findByIdForUpdate(101L);
             doReturn(List.of()).when(bookingRepository).findOverlappingBookings(100L, checkIn,
                     checkOut, BookingStatus.CANCELLED);
+
             doReturn(List.of()).when(bookingRepository).findOverlappingBookings(101L, checkIn,
                     checkOut, BookingStatus.CANCELLED);
+
+            // Simula o cálculo de preço dos dois quartos.
+            // R$ 100 + R$ 200 por noite, durante 3 noites = R$ 900
+            when(promotionService.calculate(
+                    List.of(single, suite), checkIn, checkOut, 3, null, null))
+                    .thenReturn(summaryForBooking(3, 3, List.of(), "900.00", "0.00",
+                            "900.00", checkIn, checkOut, List.of(100L, 101L)));
+
             when(bookingRepository.save(any(Booking.class))).thenAnswer(inv -> inv.getArgument(0));
             when(bookingMapper.bookingResponseMapper(any(Booking.class))).thenReturn(response);
 
@@ -188,7 +204,7 @@ class BookingServiceTest {
             ArgumentCaptor<Booking> captor = ArgumentCaptor.forClass(Booking.class);
             verify(bookingRepository).save(captor.capture());
             // (100 + 200) por noite x 3 noite = 900
-            assertThat(captor.getValue().getTotalPrice()).isEqualTo(900f);
+            assertThat(captor.getValue().getTotalPrice()).isEqualByComparingTo("900.00");
             assertThat(captor.getValue().getRooms()).containsExactly(single, suite);
 
             // Travar em ordem crescentes (100 depois 101) evita deadLock entre reserevas simultâneas
@@ -247,7 +263,7 @@ class BookingServiceTest {
 
             assertThatThrownBy(() -> bookingService.newBooking(createDto(10L, List.of(100L), 1), user))
                     .isInstanceOf(BookingConflictException.class)
-                    .hasMessage("O quarto 100 já está reservado para o período selecionado");
+                    .hasMessage("O quarto 100 já está reservado para o período selecionado.");
 
             verify(bookingRepository, never()).save(any(Booking.class));
             verify(paymentService, never()).createPayment(anyLong(), any(User.class));
@@ -357,13 +373,21 @@ class BookingServiceTest {
             when(bookingRepository.save(booking)).thenReturn(booking);
             when(bookingMapper.bookingResponseMapper(booking)).thenReturn(response);
 
+            // A reserva passa de 3 para 5 noites
+            when(promotionService.calculate(
+                    List.of(single), novoCheckIn, novoCheckOut, 1, 1, List.of()))
+                    .thenReturn(summaryForBooking(
+                            5, 1, List.of(), "500.00", "0.00", "500.00",
+                            novoCheckIn, novoCheckOut, List.of(100L)
+                    ));
+
             BookingResponse result = bookingService.updateBooking(user, 55L, dto);
 
             assertThat(result).isEqualTo(response);
             assertThat(booking.getCheckInDate()).isEqualTo(novoCheckIn);
             assertThat(booking.getCheckOutDate()).isEqualTo(novoCheckOut);
             assertThat(booking.getGuestsCount()).isEqualTo(1);  // não veio no DTO: mantém
-            assertThat(booking.getTotalPrice()).isEqualTo(500f); // 100 x 5 noites
+            assertThat(booking.getTotalPrice()).isEqualByComparingTo("500.00");
         verify(paymentService).updatePendingAmount(booking);            // pagamento acompanha o novo valor
         }
 
@@ -381,11 +405,18 @@ class BookingServiceTest {
             when(bookingRepository.save(booking)).thenReturn(booking);
             when(bookingMapper.bookingResponseMapper(booking)).thenReturn(response);
 
+            when(promotionService.calculate(
+                    List.of(single), checkIn, checkOut, 1, 1, List.of()))
+                    .thenReturn(summaryForBooking(
+                            3, 1, List.of(), "300.00", "0.00", "300.00",
+                            checkIn, checkOut, List.of(100L)
+                    ));
+
             bookingService.updateBooking(user, 55L, dto);
 
             assertThat(booking.getCheckInDate()).isEqualTo(checkIn);
             assertThat(booking.getCheckOutDate()).isEqualTo(checkOut);
-            assertThat(booking.getTotalPrice()).isEqualTo(300f);
+            assertThat(booking.getTotalPrice()).isEqualByComparingTo("300.00");
         }
 
         @Test

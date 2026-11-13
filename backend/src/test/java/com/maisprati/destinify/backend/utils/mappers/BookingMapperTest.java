@@ -61,7 +61,7 @@ class BookingMapperTest {
         assertThat(response.checkInDate()).isEqualTo(checkIn);
         assertThat(response.checkOutDate()).isEqualTo(checkOut);
         assertThat(response.guestsCount()).isEqualTo(3);
-        assertThat(response.totalPrice()).isEqualTo(900f);
+        assertThat(response.totalPrice()).isEqualByComparingTo("900.00");
         assertThat(response.status()).isEqualTo(BookingStatus.PENDING);
         assertThat(response.createdAt()).isEqualTo(booking.getCreatedAt());
 

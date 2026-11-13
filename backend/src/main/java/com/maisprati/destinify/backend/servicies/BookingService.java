@@ -49,16 +49,28 @@ public class BookingService {
         return promotionService.calculate(rooms, request.checkInDate(), request.checkOutDate(),
                 request.guestsCount(), request.adultsCount(), request.childrenAges());
     }
-
     private List<Room> loadRooms(BookingCreate request, boolean lock) {
-        if (request.checkInDate().isBefore(java.time.LocalDate.now()) || !request.checkOutDate().isAfter(request.checkInDate()))
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Informe datas válidas: saída após chegada.");
+            if(!request.checkOutDate().isAfter(request.checkInDate())) {
+                throw new BookingConflictException(
+                        "A data de check-out deve ser posterior à data de check-in"
+                );
+            }
+
+            if (request.checkInDate().isBefore(java.time.LocalDate.now())) {
+                throw new BookingConflictException(
+                        "A data de check-in não pode estar no passado"
+                );
+            }
+
         var rooms = new ArrayList<Room>();
         for (Long id : request.roomIds().stream().distinct().sorted().toList()) {
             Room room = (lock ? roomRepository.findByIdForUpdate(id) : roomRepository.findById(id))
                     .orElseThrow(() -> new RoomNotFoundException(id));
-            if (!room.getHotel().getHotel_id().equals(request.hotelId()))
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Os quartos devem pertencer ao mesmo hotel.");
+            if (!room.getHotel().getHotel_id().equals(request.hotelId())) {
+                    throw new BookingConflictException(
+                            "Todos os quartos devem pertencer ao hotel informado"
+                    );
+                }
             if (room.getRoomStatus() != com.maisprati.destinify.backend.domain.enums.RoomStatus.AVALIABLE)
                 throw new BookingConflictException("Quarto indisponível para reserva.");
             if (!bookingRepository.findOverlappingBookings(id, request.checkInDate(), request.checkOutDate(), BookingStatus.CANCELLED).isEmpty())
@@ -83,8 +95,28 @@ public class BookingService {
             User loggedUser) {
 
         List<Room> rooms = loadRooms(bookingCreate, true);
-        var price = promotionService.calculate(rooms, bookingCreate.checkInDate(), bookingCreate.checkOutDate(),
-                bookingCreate.guestsCount(), bookingCreate.adultsCount(), bookingCreate.childrenAges());
+
+        int maxCapacity = rooms.stream()
+                .mapToInt(room -> room.getRoomType().getMaxCapacity())
+                .sum();
+
+        if (bookingCreate.guestsCount() > maxCapacity) {
+            throw new BookingConflictException(
+                    String.format(
+                            "Os quartos selecionados comportam no máximo %d hóspede(s)",
+                            maxCapacity
+                    )
+            );
+        }
+
+        var price = promotionService.calculate(
+                rooms,
+                bookingCreate.checkInDate(),
+                bookingCreate.checkOutDate(),
+                bookingCreate.guestsCount(),
+                bookingCreate.adultsCount(),
+                bookingCreate.childrenAges()
+        );
 
         Booking booking = new Booking();
         booking.setUser(loggedUser);

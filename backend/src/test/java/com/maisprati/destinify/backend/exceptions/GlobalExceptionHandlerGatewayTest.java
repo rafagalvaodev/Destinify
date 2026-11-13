@@ -23,6 +23,6 @@ class GlobalExceptionHandlerGatewayTest {
         assertThat(body.status()).isEqualTo(502);
         assertThat(body.error()).isEqualTo("Bad Gateway");
         assertThat(body.message()).isEqualTo("Falha no PagBank");
-        assertThat(body.path()).isEqualTo("/api/bookings/7/checkout");
+        assertThat(body.path()).isEqualTo("/api/booking/7/checkout");
     }
 }

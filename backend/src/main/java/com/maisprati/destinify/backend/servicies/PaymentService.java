@@ -129,28 +129,6 @@ public class PaymentService {
                 paymentRepository.save(payment));
     }
 
-    @Transactional
-    public PaymentResponse pay(Long bookingId, User loggedUser) {
-        Booking bookingPending = bookingRepository
-                .findById(bookingId)
-                .orElseThrow(() -> new BookingNotFoundException(bookingId));
-
-        if (bookingPending.getStatus() != BookingStatus.PENDING) {
-            throw new BookingConflictException("This booking is not pending");
-        }
-
-        Payment pendingPayment = paymentRepository
-                .findFirstByBookingIdAndPaymentStatusOrderByCreatedAtDesc(
-                        bookingId, PaymentStatus.PENDING)
-                .orElseThrow(() -> new ResourceNotFoundException("Payment pending not found"));
-
-        return processPayment(
-                bookingId,
-                pendingPayment.getId(),
-                loggedUser,
-                PaymentStatus.APPROVED
-        );
-    }
 
     @Transactional
     public void updatePendingAmount(Booking booking) {

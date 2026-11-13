@@ -139,7 +139,7 @@ public class HotelControllerTest {
         @Test
         @DisplayName("GET /api/hotels/search repassa nome e cidade para o service")
         void search_repassaFiltros() throws Exception {
-            when(hotelService.findByNameAndOrCity(eq("rio"), eq("RJ"), any(Pageable.class)))
+            when(hotelService.search(eq("rio"), eq("RJ"), isNull(), isNull(), isNull(), isNull(), any(Pageable.class)))
                     .thenReturn(new PageImpl<>(List.of(hotelResponse()), PageRequest.of(0, 10), 1));
 
             mockMvc.perform(get("/api/hotels/search").param("name", "rio").param("city", "RJ"))
