@@ -1,9 +1,11 @@
 package com.maisprati.destinify.backend.controllers;
 
 import com.maisprati.destinify.backend.integrations.pagbank.PagBankWebhookSignature;
+import com.maisprati.destinify.backend.servicies.PagBankWebhookService;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -20,45 +22,36 @@ public class PagBankWebhookController {
     private static final Logger log = LoggerFactory.getLogger(PagBankWebhookController.class);
 
     private final PagBankWebhookSignature signature;
+    private final PagBankWebhookService webhookService;
 
-    public PagBankWebhookController(PagBankWebhookSignature signature) {
+    public PagBankWebhookController(PagBankWebhookSignature signature, PagBankWebhookService webhookService) {
         this.signature = signature;
+        this.webhookService = webhookService;
     }
 
-    /**
-     * @RequestBody byte[]: recebemos os BYTES crus do corpo (hash é calculado sobre eles).
-     * @RequestHeader required=false: sem o cabeçalho a requisição não é rejeitada pelo Spring;
-     * quem decidade é a validação da assinatura.
-     */
     @PostMapping("/webhook")
     public ResponseEntity<Void> receber(
             @RequestBody byte[] corpo,
             @RequestHeader(name = "x-authenticity-token", required = false) String assinaturaRecebida) {
 
-        boolean valida = signature.valida(corpo, assinaturaRecebida);
+        if (!signature.valida(corpo, assinaturaRecebida)) {
+            log.warn("PagBank webhook | assinatura inválida ou ausente: descartado (cabeçalho presente: {})",
+                assinaturaRecebida != null);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
 
-        log.info("PagBank webhook | assinatura {} | cabeçalho presente: {} | {} bytes",
-                valida ? "VÁLIDA" : "INVÁLIDA", assinaturaRecebida != null, corpo.length);
-
-        if (!valida && assinaturaRecebida != null) {
-            // Ajuda a depurar divergência (token errado? corpo alterado?) sem expor o hash inteiro.
-            log.warn("PagBank webhook | recebida começa com {} | calculada começa com {}",
-                    prefixo(assinaturaRecebida), prefixo(signature.calcular(corpo)));
+        // só para a depuração no sanbox: corpo tem dados pessoais. Fica Desligado por padrão (nivel DEBUG).
+        if (log.isDebugEnabled()) {
+            log.debug("PagBank webhook | corpo: {}", new String(corpo, StandardCharsets.UTF_8));
         }
 
-        log.info("PagBank webhook | corpo: {}", new String(corpo, StandardCharsets.UTF_8));
-
-        return ResponseEntity.ok().build();
-    }
-
-    private static String prefixo(String hash) {
-
-        // Protege contra valores nulos ou vazios;
-        if (hash == null || hash.isBlank()) {
-            return "<indisponível>";
+        try {
+            PagBankWebhookService.Resultado resultado = webhookService.processar(corpo);
+            log.info("PagBank webhook | resultado {}", resultado);
+            return ResponseEntity.ok().build();
+        } catch (RuntimeException e) {
+            log.error("PagBank webhook | falha ao processar; o PagBank deve reenviar", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
-
-        String limpo = hash.trim();
-        return limpo.length() <= 8 ? limpo : limpo.substring(0, 8) + "...";
     }
 }
