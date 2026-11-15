@@ -3,7 +3,7 @@ package com.maisprati.destinify.backend.integrations.pagbank;
 import java.util.List;
 import java.util.Map;
 
-public record PagBankOrder(String ReferenceId, String chargeStatus, Integer paidCents) {
+public record PagBankOrder(String referenceId, String chargeStatus, Integer paidCents) {
 
     public static PagBankOrder from(Map<?, ?> pedido) {
         if (pedido == null) {
