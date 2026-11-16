@@ -24,6 +24,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestClientResponseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -35,6 +38,8 @@ import java.util.Map;
 
 @Service
 public class PaymentService {
+
+    private static final Logger log = LoggerFactory.getLogger(PaymentService.class);
 
     // Fuso usado para validade do checkout (o PagBank espera data com fuso). Público para os testes usarem.
     public static final ZoneId ZONA = ZoneId.of("America/Sao_Paulo");
@@ -166,7 +171,19 @@ public class PaymentService {
         CheckoutCriado checkout;
         try {
             checkout = CheckoutCriado.from(pagBankClient.criarCheckout(corpo));
+        } catch (RestClientResponseException ex) {
+            int status = ex.getStatusCode().value();
+            log.error("PagBank recusou checkout da reserva {}: HTTP {}", bookingId, status);
+            String mensagem = switch (status) {
+                case 401 -> "PagBank recusou a autenticação. Verifique o token e o ambiente configurados no servidor.";
+                case 403 -> "PagBank negou acesso ao checkout. Verifique as permissões da conta e do token.";
+                case 400, 422 -> "PagBank recusou os dados do checkout. Verifique os dados e as URLs configuradas no servidor.";
+                case 429 -> "Limite de requisições do PagBank atingido. Tente novamente em alguns instantes.";
+                default -> "Não foi possível criar o checkout no PagBank (HTTP " + status + ").";
+            };
+            throw new PaymentGatewayException(mensagem, ex);
         } catch (RestClientException | IllegalStateException ex) {
+            log.error("Falha no checkout PagBank da reserva {}: {}", bookingId, ex.getClass().getSimpleName());
             // RestClientException = erro HTTP/rede (401, 400, 500, timeout ...).
             // IllegalStateException = resposta sem id/link (CheckoutCriado.from).
             throw new PaymentGatewayException("Não foi possível criar o checkout no PagBank", ex);

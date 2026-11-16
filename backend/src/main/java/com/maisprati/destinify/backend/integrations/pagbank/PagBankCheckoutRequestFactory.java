@@ -26,7 +26,7 @@ public class PagBankCheckoutRequestFactory {
     private final String notificationUrl;
 
     public PagBankCheckoutRequestFactory(
-            @Value("${pagbank.redirect-url:http://localhost:5173/pagamento/retorno}") String redirectUrl,
+            @Value("${pagbank.redirect-url:}") String redirectUrl,
             @Value("${pagbank.notification-url:}") String notificationUrl) {
         this.redirectUrl = redirectUrl;
         this.notificationUrl = notificationUrl;
@@ -56,10 +56,14 @@ public class PagBankCheckoutRequestFactory {
                 .toList());
 
 
-        String retornoDaReserva = redirectUrl + "?reserva=" + booking.getId();
-        corpo.put("redirect_url", retornoDaReserva);
-        corpo.put("redirect_waiting_time", 5);
-        corpo.put("return_url", retornoDaReserva);
+        // O retorno é opcional. URLs localhost provocaram bloqueio no Cloudflare
+        // do sandbox; configure uma URL pública para habilitar o retorno ao site.
+        if (redirectUrl != null && !redirectUrl.isBlank()) {
+            String retornoDaReserva = redirectUrl + "?reserva=" + booking.getId();
+            corpo.put("redirect_url", retornoDaReserva);
+            corpo.put("redirect_waiting_time", 5);
+            corpo.put("return_url", retornoDaReserva);
+        }
 
         if (notificationUrl != null && !notificationUrl.isBlank()) {
             corpo.put("notification_urls", List.of(notificationUrl));

@@ -180,7 +180,7 @@ class PaymentServiceCheckoutTest {
 
         assertThatThrownBy(() -> paymentService.startCheckout(7L, owner))
                 .isInstanceOf(PaymentGatewayException.class)
-                .hasMessage("Não foi possível criar o checkout no PagBank")
+                .hasMessage("PagBank recusou a autenticação. Verifique o token e o ambiente configurados no servidor.")
                 .hasCauseInstanceOf(HttpClientErrorException.class);
 
         verify(paymentRepository, never()).save(any(Payment.class));

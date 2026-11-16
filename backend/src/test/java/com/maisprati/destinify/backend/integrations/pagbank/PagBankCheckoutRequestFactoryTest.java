@@ -22,7 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class PagBankCheckoutRequestFactoryTest {
 
-    private static final String REDIRECT = "http://localhost:5173/pagamento/retorno";
+    private static final String REDIRECT = "https://destinify.example/pagamento/retorno";
     private static final String WEBHOOK = "https://abc123.ngrok.app/api/payments/pagbank/webhook";
     private static final ZonedDateTime EXPIRACAO =
             ZonedDateTime.of(2030, 1, 10, 12, 30, 0, 0, ZoneId.of("America/Sao_Paulo"));
@@ -129,6 +129,21 @@ class PagBankCheckoutRequestFactoryTest {
         Map<String, Object> corpo = factory.montar(payment, booking, EXPIRACAO);
 
         assertThat(corpo.get("redirect_url")).isEqualTo(REDIRECT + "?reserva=7");
+        assertThat(corpo.get("return_url")).isEqualTo(REDIRECT + "?reserva=7");
+        assertThat(corpo.get("redirect_waiting_time")).isEqualTo(5);
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {" ", "   "})
+    void montar_semRetornoPublico_omiteRetornoEMantemWebhook(String redirect) {
+        PagBankCheckoutRequestFactory semRetorno = new PagBankCheckoutRequestFactory(redirect, WEBHOOK);
+
+        Map<String, Object> corpo = semRetorno.montar(payment, booking, EXPIRACAO);
+
+        assertThat(corpo).doesNotContainKeys("redirect_url", "return_url", "redirect_waiting_time");
+        assertThat(corpo.get("notification_urls")).isEqualTo(List.of(WEBHOOK));
+        assertThat(corpo.get("payment_notification_urls")).isEqualTo(List.of(WEBHOOK));
     }
 
     @Test

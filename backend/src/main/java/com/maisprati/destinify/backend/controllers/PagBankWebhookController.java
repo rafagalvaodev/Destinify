@@ -20,7 +20,9 @@ import java.util.List;
 @RequestMapping("/api/payments/pagbank")
 public class PagBankWebhookController {
 
-    private static final Logger log = LoggerFactory.getLogger(PagBankWebhookController.class);
+    private static final Logger log =
+            LoggerFactory
+                    .getLogger(PagBankWebhookController.class);
 
     private final PagBankWebhookSignature signature;
     private final PagBankWebhookService webhookService;
