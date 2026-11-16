@@ -64,4 +64,8 @@ public class PaymentConfirmationService {
                 })
                 .orElse(false);
     }
+
+    public Object clearExpire() {
+        return null;
+    }
 }
