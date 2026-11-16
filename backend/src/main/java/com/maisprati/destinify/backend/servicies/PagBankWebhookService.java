@@ -49,7 +49,7 @@ public class PagBankWebhookService {
 
         return switch (notificacao.tipo()) {
             case ORDER -> processarPedido(notificacao);
-            case CHECKOUT -> processarPedido(notificacao);
+            case CHECKOUT -> processarCheckout(notificacao);
             default -> {
                 log.info("PagBank webhook | tipo {} não tratado: ignorado", notificacao.tipo());
                 yield Resultado.IGNORADO;

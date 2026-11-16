@@ -9,6 +9,11 @@ import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import java.nio.charset.StandardCharsets;
+import java.security.KeyPairGenerator;
+import java.security.Signature;
+import java.security.spec.ECGenParameterSpec;
+import java.util.Base64;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -31,7 +36,7 @@ class PagBankWebhookSignatureTest {
 
     @BeforeEach
     void setUp() {
-        signature = new PagBankWebhookSignature(TOKEN);
+        signature = new PagBankWebhookSignature(TOKEN, "");
     }
 
     private static byte[] bytes(String texto) {
@@ -49,9 +54,11 @@ class PagBankWebhookSignatureTest {
     }
 
     @Test
-    void calcular_coporFormatado_geraOutroHash() {
-        assertThat(signature.calcular(bytes(CORPO_FORMATADO))).isEqualTo(HASH_FORMATADO);
-        assertThat(signature.calcular(bytes(HASH_FORMATADO))).isNotEqualTo(HASH_CORPO);
+    void calcular_corpoFormatado_geraOutroHash() {
+        String hashCalculado = signature.calcular(bytes(CORPO_FORMATADO));
+
+        assertThat(hashCalculado).isEqualTo(HASH_FORMATADO);
+        assertThat(hashCalculado).isNotEqualTo(HASH_CORPO);
     }
 
     @Test
@@ -74,7 +81,7 @@ class PagBankWebhookSignatureTest {
 
     @Test
     void valida_assinaturaDeOutroToken_retornaFalse() {
-        PagBankWebhookSignature outroToken = new PagBankWebhookSignature("token-do-atacante");
+        PagBankWebhookSignature outroToken = new PagBankWebhookSignature("token-do-atacante", "");
 
         assertThat(signature.valida(bytes(CORPO), outroToken.calcular(bytes(CORPO)))).isFalse();
     }
@@ -87,6 +94,23 @@ class PagBankWebhookSignatureTest {
     }
 
     @Test
+    void validaAssinaturas_confereEcdsaSobreOsBytesOriginais() throws Exception {
+        var gerador = KeyPairGenerator.getInstance("EC");
+        gerador.initialize(new ECGenParameterSpec("secp256r1"));
+        var par = gerador.generateKeyPair();
+        String chavePublica = Base64.getEncoder().encodeToString(par.getPublic().getEncoded());
+
+        var assinador = Signature.getInstance("SHA256withECDSA");
+        assinador.initSign(par.getPrivate());
+        assinador.update(bytes(CORPO));
+        String assinatura = Base64.getEncoder().encodeToString(assinador.sign());
+
+        var verificador = new PagBankWebhookSignature(TOKEN, chavePublica);
+        assertThat(verificador.validaAssinaturas(bytes(CORPO), List.of("inválida", assinatura))).isTrue();
+        assertThat(verificador.validaAssinaturas(bytes(CORPO_FORMATADO), List.of(assinatura))).isFalse();
+    }
+
+    @Test
     void valida_corpoNulo_retornaFalse() {
         assertThat(signature.valida(null, HASH_CORPO)).isFalse();
     }
@@ -94,7 +118,7 @@ class PagBankWebhookSignatureTest {
     @ParameterizedTest(name = "token [{0}] nunca valida")
     @NullAndEmptySource
     void valida_tokenVazio_nuncaValida(String tokenVazio) {
-        PagBankWebhookSignature semToken = new PagBankWebhookSignature(tokenVazio);
+        PagBankWebhookSignature semToken = new PagBankWebhookSignature(tokenVazio, "");
         // O atacante calcula o hash de "-" + corpo (token vazio) e o envia como assinatura.
         String hashSemToken = semToken.calcular(bytes(CORPO));
 

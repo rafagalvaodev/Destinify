@@ -32,7 +32,7 @@ public record PagBankNotification(Tipo tipo, String id, String referenceId,Strin
     public static Tipo tipoDe(String id) {
         if (id == null) return Tipo.DESCONHECIDO;
         if (id.startsWith("ORDE_")) return Tipo.ORDER;
-        if (id.startsWith("CHECK_")) return Tipo.CHECKOUT;
+        if (id.startsWith("CHEC_")) return Tipo.CHECKOUT;
         if (id.startsWith("CHAR_")) return Tipo.CHARGE;
         return Tipo.DESCONHECIDO;
     }

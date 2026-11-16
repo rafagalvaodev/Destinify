@@ -55,8 +55,11 @@ public class PagBankCheckoutRequestFactory {
                 .map(tipo -> Map.of("type", tipo))
                 .toList());
 
-        // Volta para o front já dizendo qual reserva foi paga, para a tela de retorno consultar o status.
-        corpo.put("redirect_url", redirectUrl + "?reserva=" + booking.getId());
+
+        String retornoDaReserva = redirectUrl + "?reserva=" + booking.getId();
+        corpo.put("redirect_url", retornoDaReserva);
+        corpo.put("redirect_waiting_time", 5);
+        corpo.put("return_url", retornoDaReserva);
 
         if (notificationUrl != null && !notificationUrl.isBlank()) {
             corpo.put("notification_urls", List.of(notificationUrl));

@@ -55,10 +55,10 @@ class PagBankWebhookControllerTest {
     void assinaturaInvalida_retorna401() throws Exception {
         // o mock de signature devolve false por padrão (assinatura inválida)
         mockMvc.perform(post("/api/payments/pagbank/webhook")
-                .contentType(MediaType.APPLICATION_JSON)
-                .header("x-authenticity-tokem", "falsa")
-                .content(CORPO))
-            .andExpect(status().isForbidden());
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("x-authenticity-token", "falsa")
+                        .content(CORPO))
+                .andExpect(status().isUnauthorized());
 
         verifyNoInteractions(webhookService);
     }
@@ -69,7 +69,7 @@ class PagBankWebhookControllerTest {
         mockMvc.perform(post("/api/payments/pagbank/webhook")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(CORPO))
-            .andExpect(status().isForbidden());
+            .andExpect(status().isUnauthorized());
 
         verifyNoInteractions(webhookService);
     }

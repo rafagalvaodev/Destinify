@@ -5,6 +5,7 @@ import com.maisprati.destinify.backend.servicies.PagBankWebhookService;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -13,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/payments/pagbank")
@@ -32,22 +33,23 @@ public class PagBankWebhookController {
     @PostMapping("/webhook")
     public ResponseEntity<Void> receber(
             @RequestBody byte[] corpo,
-            @RequestHeader(name = "x-authenticity-token", required = false) String assinaturaRecebida) {
-
-        if (!signature.valida(corpo, assinaturaRecebida)) {
-            log.warn("PagBank webhook | assinatura inválida ou ausente: descartado (cabeçalho presente: {})",
-                assinaturaRecebida != null);
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-            }
-
-        // só para a depuração no sanbox: corpo tem dados pessoais. Fica Desligado por padrão (nivel DEBUG).
-        if (log.isDebugEnabled()) {
-            log.debug("PagBank webhook | corpo: {}", new String(corpo, StandardCharsets.UTF_8));
-        }
+            @RequestHeader HttpHeaders cabecalhos) {
 
         try {
+            List<String> assinaturas = cabecalhos.get("x-payload-signature");
+
+            boolean modoEcdsa = signature.usaChavePublica() || assinaturas != null;
+            boolean autenticado = modoEcdsa
+                    ? signature.validaAssinaturas(corpo, assinaturas)
+                    : signature.valida(corpo, cabecalhos.getFirst("x-authenticity-token"));
+
+            if (!autenticado) {
+                log.warn("PagBank webhook | assinatura válida inválida ou ausente");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+
             PagBankWebhookService.Resultado resultado = webhookService.processar(corpo);
-            log.info("PagBank webhook | resultado {}", resultado);
+            log.info("PagBank webook | resultado {}", resultado);
             return ResponseEntity.ok().build();
         } catch (RuntimeException e) {
             log.error("PagBank webhook | falha ao processar; o PagBank deve reenviar", e);

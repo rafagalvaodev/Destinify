@@ -32,7 +32,7 @@ public class PaymentConfirmationService {
         if (payment == null) {
             return GatewayOutcome.NOT_FOUND;
         }
-        if (payment.getPaymentStatus() == PaymentStatus.PENDING) {
+        if (payment.getPaymentStatus() != PaymentStatus.PENDING) {
             return GatewayOutcome.ALREADY_PROCESSED;
         }
         if (PagBankCheckoutRequestFactory.emCentavos(payment.getAmount()) != paidCents) {
@@ -60,6 +60,8 @@ public class PaymentConfirmationService {
                     payment.setProviderCheckoutId(null);
                     payment.setCheckoutUrl(null);
                     payment.setExpiresAt(null);
+                    // o link venceu. A reserva e o pagamento continua pendentes.
+                    paymentRepository.save(payment);
                     return true;
                 })
                 .orElse(false);
