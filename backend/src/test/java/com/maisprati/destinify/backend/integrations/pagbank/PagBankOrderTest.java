@@ -41,10 +41,11 @@ class PagBankOrderTest {
     }
 
     @Test
-    void from_resumoComPagoZero_usaOValorDaCobranca() {
-        PagBankOrder order = PagBankOrder.from(pedido("payment-3", List.of(cobranca("PAID", 30000, 0))));
+    void from_resumoComPagoZero_preservaZero() {
+        PagBankOrder order = PagBankOrder.from(
+                pedido("payment-3", List.of(cobranca("PAID", 30000, 0))));
 
-        assertThat(order.paidCents()).isEqualTo(30000);
+        assertThat(order.paidCents()).isZero();
     }
 
     @Test
