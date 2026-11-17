@@ -58,7 +58,7 @@ public class PagBankCheckoutRequestFactory {
 
         // O retorno é opcional. URLs localhost provocaram bloqueio no Cloudflare
         // do sandbox; configure uma URL pública para habilitar o retorno ao site.
-        if (redirectUrl != null && !redirectUrl.isBlank()) {
+        if (retornoPublicoValido(redirectUrl)) {
             String retornoDaReserva = redirectUrl + "?reserva=" + booking.getId();
             corpo.put("redirect_url", retornoDaReserva);
             corpo.put("redirect_waiting_time", 5);
@@ -70,6 +70,22 @@ public class PagBankCheckoutRequestFactory {
             corpo.put("payment_notification_urls", List.of(notificationUrl));
         }
         return corpo;
+    }
+
+    static boolean retornoPublicoValido(String url) {
+        if (url == null || url.isBlank()) {
+            return false;
+        }
+        try {
+            java.net.URI uri = java.net.URI.create(url.trim());
+            String host = uri.getHost() == null ? "" : uri.getHost().toLowerCase();
+            boolean local = host.equals("localhost") || host.endsWith(".localhost")
+                    || host.startsWith("127.") || host.equals("0.0.0.0") || host.equals("::1")
+                    || host.startsWith("192.168.") || host.startsWith("10.");
+            return "https".equalsIgnoreCase(uri.getScheme()) && !host.isEmpty() && !local;
+        } catch (IllegalArgumentException ex) {
+            return false;
+        }
     }
 
     private Map<String, Object> montarItem(Payment payment, Booking booking) {

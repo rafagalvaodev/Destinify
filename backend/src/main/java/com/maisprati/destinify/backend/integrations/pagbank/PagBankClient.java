@@ -27,6 +27,8 @@ public class PagBankClient {
         this.restClient = restClientBuilder.clone()
                 .baseUrl(baseUrl)
                 .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                .defaultHeader(HttpHeaders.USER_AGENT, "Destinify/1.0 (Spring RestClient)")
+                .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
                 .build();
     }
 

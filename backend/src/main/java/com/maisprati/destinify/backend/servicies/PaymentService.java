@@ -173,7 +173,11 @@ public class PaymentService {
             checkout = CheckoutCriado.from(pagBankClient.criarCheckout(corpo));
         } catch (RestClientResponseException ex) {
             int status = ex.getStatusCode().value();
-            log.error("PagBank recusou checkout da reserva {}: HTTP {}", bookingId, status);
+            String corpoErro = ex.getResponseBodyAsString();
+            if (corpoErro != null && corpoErro.length() > 400) {
+                corpoErro = corpoErro.substring(0, 400);
+            }
+            log.error("PagBank recusou checkout da reserva {}: HTTP {} | corpo: {}", bookingId, status, corpoErro);
             String mensagem = switch (status) {
                 case 401 -> "PagBank recusou a autenticação. Verifique o token e o ambiente configurados no servidor.";
                 case 403 -> "PagBank negou acesso ao checkout. Verifique as permissões da conta e do token.";
