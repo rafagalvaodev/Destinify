@@ -6,6 +6,7 @@ import UserPanel from './user/UserPanel';
 import Admin from './admin/Admin';
 import Homepage from './pages/Homepage/Homepage';
 import PaymentReturn from './user/PaymentReturn';
+import { API_URL } from './apiConfig';
 
 const paymentReturnPath = '/pagamento/retorno';
 const paymentReturnSessionKey = 'destinify.pagbankReturn';
@@ -35,7 +36,7 @@ function App() {
 
         if (ticket) {
           if (!googleExchange.current) {
-            googleExchange.current = fetch('http://localhost:8080/api/auth/login/google/exchange', {
+            googleExchange.current = fetch(`${API_URL}/auth/login/google/exchange`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
               body: new URLSearchParams({ ticket }),
@@ -65,13 +66,13 @@ function App() {
           setPaginaAtual('paymentReturn');
           return;
         }
-        const adminResponse = await fetch('http://localhost:8080/api/users/all-users', { headers });
+        const adminResponse = await fetch(`${API_URL}/users/all-users`, { headers });
         if (adminResponse.ok) {
           if (active) setPaginaAtual('home');
           return;
         }
         if (adminResponse.status === 403) {
-          const userResponse = await fetch('http://localhost:8080/api/users/me', { headers });
+          const userResponse = await fetch(`${API_URL}/users/me`, { headers });
           if (userResponse.ok) {
             if (active) setPaginaAtual('home');
             return;
@@ -98,7 +99,7 @@ function App() {
   React.useEffect(() => {
     if (paginaAtual !== 'userPanel' || paymentBooking) return;
     let active = true;
-    fetch('http://localhost:8080/api/users/all-users', {
+    fetch(`${API_URL}/users/all-users`, {
       headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` },
     }).then((response) => {
       if (active && response.ok) setPaginaAtual('admin');

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import './Register.css';
+import { API_URL } from '../../apiConfig';
 
 export default function Register({ setPaginaAtual }) {
   // Controle de Etapas (1 ou 2)
@@ -62,7 +63,7 @@ export default function Register({ setPaginaAtual }) {
     }
 
     try {
-      const res = await fetch('http://localhost:8080/api/users/register', {
+      const res = await fetch(`${API_URL}/users/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

@@ -19,6 +19,8 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import org.springframework.beans.factory.annotation.Value;
+
 import java.util.List;
 
 @Configuration
@@ -27,6 +29,10 @@ public class SecurityConfig {
 
     @Autowired
     private AccessTokenFilter accessTokenFilter;
+
+    // Sites que podem chamar a API pelo navegador (separados por vírgula). Em produção vem de CORS_ALLOWED_ORIGINS.
+    @Value("${destinify.cors.allowed-origins:http://localhost:5173,http://localhost:5174}")
+    private List<String> allowedOrigins = List.of("http://localhost:5173", "http://localhost:5174");
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity){
@@ -42,12 +48,12 @@ public class SecurityConfig {
                                     .permitAll();
 
                             request.requestMatchers(HttpMethod.GET,
-                                    "/api/auth/login",
-                                    "/api/auth/login/google/autorizado")
+                                            "/api/auth/login",
+                                            "/api/auth/login/google/autorizado")
                                     .permitAll();
 
                             request.requestMatchers(HttpMethod.POST,
-                                    "/api/auth/login" ,
+                                            "/api/auth/login" ,
                                             "/api/users/register")
                                     .permitAll();
                             request.requestMatchers(HttpMethod.GET,
@@ -134,7 +140,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration corsConfiguration = new CorsConfiguration();
 
-        corsConfiguration.setAllowedOrigins(List.of("http://localhost:5173", "http://localhost:5174"));
+        corsConfiguration.setAllowedOrigins(allowedOrigins);
         corsConfiguration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         corsConfiguration.setAllowedHeaders(List.of("*"));
         corsConfiguration.setAllowCredentials(true);
