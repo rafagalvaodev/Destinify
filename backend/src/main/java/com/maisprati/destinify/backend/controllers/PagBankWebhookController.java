@@ -21,13 +21,14 @@ import java.util.List;
 public class PagBankWebhookController {
 
     private static final Logger log =
-            LoggerFactory
-                    .getLogger(PagBankWebhookController.class);
+            LoggerFactory.getLogger(PagBankWebhookController.class);
 
     private final PagBankWebhookSignature signature;
     private final PagBankWebhookService webhookService;
 
-    public PagBankWebhookController(PagBankWebhookSignature signature, PagBankWebhookService webhookService) {
+    public PagBankWebhookController(
+            PagBankWebhookSignature signature,
+            PagBankWebhookService webhookService) {
         this.signature = signature;
         this.webhookService = webhookService;
     }
@@ -39,22 +40,45 @@ public class PagBankWebhookController {
 
         try {
             List<String> assinaturas = cabecalhos.get("x-payload-signature");
+            String authenticityToken = cabecalhos.getFirst("x-authenticity-token");
+            boolean chavePublicaCarregada = signature.usaChavePublica();
 
-            boolean modoEcdsa = signature.usaChavePublica() || assinaturas != null;
+            // Regra atual do Destinify: uma chave configurada ou a presença
+            // do cabeçalho x-payload-signature seleciona a validação ECDSA.
+            boolean modoEcdsa = chavePublicaCarregada || assinaturas != null;
+
+            // A assinatura é verificada sobre os bytes originais recebidos.
             boolean autenticado = modoEcdsa
                     ? signature.validaAssinaturas(corpo, assinaturas)
-                    : signature.valida(corpo, cabecalhos.getFirst("x-authenticity-token"));
+                    : signature.valida(corpo, authenticityToken);
 
             if (!autenticado) {
-                log.warn("PagBank webhook | assinatura válida inválida ou ausente");
+                boolean temPayloadSignature = assinaturas != null
+                        && assinaturas.stream().anyMatch(valor -> !valor.isBlank());
+
+                boolean temAuthenticityToken = authenticityToken != null
+                        && !authenticityToken.isBlank();
+
+                // Registra a presença dos cabeçalhos sem expor seus valores.
+                log.warn(
+                        "PagBank webhook recusado | modo={} | chavePublicaCarregada={} "
+                                + "| x-payload-signature={} | x-authenticity-token={} | bytes={}",
+                        modoEcdsa ? "ECDSA" : "TOKEN",
+                        chavePublicaCarregada,
+                        temPayloadSignature,
+                        temAuthenticityToken,
+                        corpo.length
+                );
+
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
             }
 
             PagBankWebhookService.Resultado resultado = webhookService.processar(corpo);
-            log.info("PagBank webook | resultado {}", resultado);
+            log.info("PagBank webhook | resultado {}", resultado);
             return ResponseEntity.ok().build();
+
         } catch (RuntimeException e) {
-            log.error("PagBank webhook | falha ao processar; o PagBank deve reenviar", e);
+            log.error("PagBank webhook | falha ao processar a notificação", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
