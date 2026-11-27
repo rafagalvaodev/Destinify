@@ -17,6 +17,9 @@ import java.time.LocalDateTime;
 @Service
 public class PaymentConfirmationService {
 
+    @jakarta.persistence.PersistenceContext
+    private jakarta.persistence.EntityManager entityManager;
+
     private final PaymentRepository paymentRepository;
     private final BookingRepository bookingRepository;
 
@@ -32,6 +35,22 @@ public class PaymentConfirmationService {
         if (payment == null) {
             return GatewayOutcome.NOT_FOUND;
         }
+        return approveLocked(payment, paidCents);
+    }
+
+    @Transactional
+    public GatewayOutcome approveForCheckout(Long paymentId, String checkoutId, int paidCents) {
+        Payment payment = paymentRepository.findLockedById(paymentId).orElse(null);
+        if (payment == null) return GatewayOutcome.NOT_FOUND;
+        // Releia os dados após a consulta remota: outra requisição pode ter confirmado ou alterado a reserva.
+        entityManager.refresh(payment, jakarta.persistence.LockModeType.PESSIMISTIC_WRITE);
+        if (!checkoutId.equals(payment.getProviderCheckoutId())) return GatewayOutcome.AMOUNT_MISMATCH;
+        if (payment.getPaymentStatus() == PaymentStatus.REJECTED) return GatewayOutcome.BOOKING_NOT_PENDING;
+        entityManager.refresh(payment.getBooking(), jakarta.persistence.LockModeType.PESSIMISTIC_WRITE);
+        return approveLocked(payment, paidCents);
+    }
+
+    private GatewayOutcome approveLocked(Payment payment, int paidCents) {
         if (payment.getPaymentStatus() == PaymentStatus.APPROVED) {
             return GatewayOutcome.ALREADY_PROCESSED;
         }

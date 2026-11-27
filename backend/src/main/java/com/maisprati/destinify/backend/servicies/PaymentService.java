@@ -63,15 +63,27 @@ public class PaymentService {
     @Value("${pagbank.checkout-expiration-minutes:30}")
     private long checkoutExpirationMinutes;
 
+    @Autowired
+    private PaymentReconciliationService reconciliationService;
+
     public record ReturnStatus(BookingStatus bookingStatus, PaymentStatus paymentStatus) {}
 
-    @Transactional(readOnly = true)
+    @Transactional
     public ReturnStatus getReturnStatus(Long bookingId, User loggedUser) {
         Booking booking = ownedBooking(bookingId, loggedUser);
-        PaymentStatus latest = paymentRepository.findFirstByBookingIdOrderByCreatedAtDescIdDesc(bookingId)
-                .map(Payment::getPaymentStatus)
+        Payment payment = paymentRepository.findFirstByBookingIdOrderByCreatedAtDescIdDesc(bookingId)
                 .orElse(null);
-        return new ReturnStatus(booking.getStatus(), latest);
+        if (booking.getStatus() == BookingStatus.PENDING && payment != null
+                && payment.getPaymentStatus() == PaymentStatus.PENDING
+                && payment.getProviderCheckoutId() != null) {
+            try {
+                var resultado = reconciliationService.reconciliar(payment.getId());
+                log.info("PagBank reconciliacao | reserva {} | {}", bookingId, resultado);
+            } catch (RestClientException ex) {
+                log.warn("PagBank indisponivel na consulta da reserva {} | {}", bookingId, ex.getClass().getSimpleName());
+            }
+        }
+        return new ReturnStatus(booking.getStatus(), payment == null ? null : payment.getPaymentStatus());
     }
 
     private Booking ownedBooking(Long bookingId, User loggedUser) {
