@@ -52,9 +52,18 @@ class PaymentConfirmationServiceTest {
     }
 
     @Test
+    void recusaRepetidaPreservaAReserva() {
+        when(paymentRepository.findLockedById(3L)).thenReturn(Optional.of(payment));
+        assertThat(service.rejectIfPending(3L)).isTrue();
+        assertThat(service.rejectIfPending(3L)).isFalse();
+        assertThat(payment.getPaymentStatus()).isEqualTo(PaymentStatus.REJECTED);
+        assertThat(booking.getStatus()).isEqualTo(BookingStatus.PENDING);
+    }
+
+    @Test
     @DisplayName("tudo certo: aprova o pagamento, define processedAt e confirma a reserva")
     void approve_valorCerto_aprovaEConfirma() {
-        when(paymentRepository.findById(3L)).thenReturn(Optional.of(payment));
+        when(paymentRepository.findLockedById(3L)).thenReturn(Optional.of(payment));
 
         GatewayOutcome result = service.approve(3L, 30000);
 
@@ -69,7 +78,7 @@ class PaymentConfirmationServiceTest {
     @Test
     @DisplayName("pagamento inexistente: NOT_FOUND")
     void approve_semPagamento_notFound() {
-        when(paymentRepository.findById(3L)).thenReturn(Optional.empty());
+        when(paymentRepository.findLockedById(3L)).thenReturn(Optional.empty());
 
         assertThat(service.approve(3L, 30000)).isEqualTo(GatewayOutcome.NOT_FOUND);
 
@@ -79,7 +88,7 @@ class PaymentConfirmationServiceTest {
     @Test
     @DisplayName("IDEMPOTÊNCIA: notificação repetida (já aprovado) não faz nada")
     void approve_jaAprovado_naoFazNada() {
-        when(paymentRepository.findById(3L)).thenReturn(Optional.of(payment));
+        when(paymentRepository.findLockedById(3L)).thenReturn(Optional.of(payment));
 
         // pagou R$ 100,00 para um pagamento de R$ 300,00
         assertThat(service.approve(3L, 10000)).isEqualTo(GatewayOutcome.AMOUNT_MISMATCH);
@@ -94,7 +103,7 @@ class PaymentConfirmationServiceTest {
     @DisplayName("reserva cancelada: não ressucita, devolve BOOKING_NOT_PENDING")
     void approve_reservaCancelada_naoConfirma() {
         booking.setStatus(BookingStatus.CANCELLED);
-        when(paymentRepository.findById(3L)).thenReturn(Optional.of(payment));
+        when(paymentRepository.findLockedById(3L)).thenReturn(Optional.of(payment));
 
         assertThat(service.approve(3L, 30000)).isEqualTo(GatewayOutcome.BOOKING_NOT_PENDING);
 

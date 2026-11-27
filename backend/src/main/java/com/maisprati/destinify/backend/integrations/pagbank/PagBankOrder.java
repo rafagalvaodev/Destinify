@@ -40,7 +40,7 @@ public record PagBankOrder(String referenceId, String chargeStatus, Integer paid
                     return cobranca;
                 }
 
-                if (primeira == null) {
+                if (primeira == null || "DECLINED".equals(primeira.get("status"))) {
                     primeira = cobranca;
                 }
             }

@@ -28,11 +28,11 @@ public class PaymentConfirmationService {
     @Transactional
     public GatewayOutcome approve(Long paymentId, int paidCents) {
 
-        Payment payment = paymentRepository.findById(paymentId).orElse(null);
+        Payment payment = paymentRepository.findLockedById(paymentId).orElse(null);
         if (payment == null) {
             return GatewayOutcome.NOT_FOUND;
         }
-        if (payment.getPaymentStatus() != PaymentStatus.PENDING) {
+        if (payment.getPaymentStatus() == PaymentStatus.APPROVED) {
             return GatewayOutcome.ALREADY_PROCESSED;
         }
         if (PagBankCheckoutRequestFactory.emCentavos(payment.getAmount()) != paidCents) {
@@ -50,6 +50,18 @@ public class PaymentConfirmationService {
         bookingRepository.save(booking);
         paymentRepository.save(payment);
         return GatewayOutcome.APPROVED;
+    }
+
+    @Transactional
+    public boolean rejectIfPending(Long paymentId) {
+        Payment payment = paymentRepository.findLockedById(paymentId).orElse(null);
+        if (payment == null || payment.getPaymentStatus() != PaymentStatus.PENDING) {
+            return false;
+        }
+        // A recusa encerra esta tentativa. A reserva continua disponível para pagar.
+        payment.setPaymentStatus(PaymentStatus.REJECTED);
+        payment.setProcessedAt(LocalDateTime.now());
+        return true; // O JPA persiste a alteração no commit.
     }
 
     @Transactional

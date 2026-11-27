@@ -1,4 +1,3 @@
-// CAMINHO: backend/src/main/java/com/maisprati/destinify/backend/servicies/PaymentService.java
 package com.maisprati.destinify.backend.servicies;
 
 import com.maisprati.destinify.backend.domain.Booking;
@@ -64,15 +63,29 @@ public class PaymentService {
     @Value("${pagbank.checkout-expiration-minutes:30}")
     private long checkoutExpirationMinutes;
 
-    @Transactional
-    public PaymentResponse createPayment(Long bookingId, User loggedUser) {
-        Booking booking = bookingRepository
-                .findById(bookingId)
-                .orElseThrow(() -> new BookingNotFoundException(bookingId));
+    public record ReturnStatus(BookingStatus bookingStatus, PaymentStatus paymentStatus) {}
 
+    @Transactional(readOnly = true)
+    public ReturnStatus getReturnStatus(Long bookingId, User loggedUser) {
+        Booking booking = ownedBooking(bookingId, loggedUser);
+        PaymentStatus latest = paymentRepository.findFirstByBookingIdOrderByCreatedAtDescIdDesc(bookingId)
+                .map(Payment::getPaymentStatus)
+                .orElse(null);
+        return new ReturnStatus(booking.getStatus(), latest);
+    }
+
+    private Booking ownedBooking(Long bookingId, User loggedUser) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new BookingNotFoundException(bookingId));
         if (!booking.getUser().getId().equals(loggedUser.getId())) {
             throw new ForbiddenException("This reservation does not belong to this user");
         }
+        return booking;
+    }
+
+    @Transactional
+    public PaymentResponse createPayment(Long bookingId, User loggedUser) {
+        Booking booking = ownedBooking(bookingId, loggedUser);
 
         if (booking.getStatus() != BookingStatus.PENDING) {
             throw new BookingConflictException("Only pending reservations can receive payment");
@@ -138,7 +151,15 @@ public class PaymentService {
     @Transactional
     public void updatePendingAmount(Booking booking) {
         Payment payment = paymentRepository.findFirstByBookingIdAndPaymentStatusOrderByCreatedAtDesc(booking.getId(), PaymentStatus.PENDING)
-                .orElseThrow(() -> new ResourceNotFoundException("Pending payment not found"));
+                .orElse(null);
+        if (payment == null) {
+            // O próximo checkout cria uma tentativa usando o novo total da reserva.
+            if (paymentRepository.findFirstByBookingIdOrderByCreatedAtDescIdDesc(booking.getId())
+                    .filter(last -> last.getPaymentStatus() == PaymentStatus.REJECTED).isPresent()) {
+                return;
+            }
+            throw new ResourceNotFoundException("Pending payment not found");
+        }
         payment.setAmount(booking.getTotalPrice()
                 .setScale(2, RoundingMode.HALF_UP));
 

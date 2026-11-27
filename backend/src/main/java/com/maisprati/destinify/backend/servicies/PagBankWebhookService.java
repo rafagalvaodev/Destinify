@@ -19,7 +19,7 @@ public class PagBankWebhookService {
     private static final Logger log = LoggerFactory.getLogger(PagBankWebhookService.class);
 
     public enum Resultado {
-        APROVADO, JA_PROCESSADO, NAO_PAGO, VALOR_DIVERGENTE, RESERVA_NAO_PENDENTE,
+        APROVADO, RECUSADO, JA_PROCESSADO, NAO_PAGO, VALOR_DIVERGENTE, RESERVA_NAO_PENDENTE,
         PAGAMENTO_NAO_ENCONTRADO, CHECKOUT_LIMPO, IGNORADO
     }
 
@@ -68,6 +68,11 @@ public class PagBankWebhookService {
         if (paymentId == null) {
             log.warn("PagBank webhook | pedido {} sem reference_id nosso: ignorado", notificacao.id());
             return Resultado.IGNORADO;
+        }
+
+        if ("DECLINED".equals(pedido.chargeStatus())) {
+            return confirmationService.rejectIfPending(paymentId)
+                    ? Resultado.RECUSADO : Resultado.IGNORADO;
         }
 
         if (!pedido.pago()) {

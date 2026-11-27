@@ -61,6 +61,14 @@ class PagBankWebhookServiceTest {
         verify(confirmationService).approve(3L, 30000);
     }
 
+    @Test
+    void recusaVerificadaEncerraATentativa() {
+        doReturn(pedidoNoPagBank("payment-3", "DECLINED", 0)).when(pagBankClient).consultarPedido("ORDE_1");
+        when(confirmationService.rejectIfPending(3L)).thenReturn(true);
+        assertThat(service.processar(notificacaoDePedido())).isEqualTo(Resultado.RECUSADO);
+        verify(confirmationService, never()).approve(anyLong(), anyInt());
+    }
+
     @ParameterizedTest(name = "{0} -> {1}")
     @CsvSource({
             "APPROVED, APROVADO",

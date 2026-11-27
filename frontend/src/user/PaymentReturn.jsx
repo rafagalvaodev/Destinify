@@ -3,6 +3,7 @@ import { apiRequest } from './api/userApi';
 
 const statusMessages = {
   PENDING: 'A reserva está pendente. Se você já pagou, aguarde a confirmação do PagBank.',
+  REJECTED: 'O PagBank recusou a última tentativa de pagamento. Sua reserva continua pendente. Acesse Minhas reservas para tentar novamente.',
   CONFIRMED: 'Pagamento confirmado. Sua reserva está confirmada.',
   CANCELLED: 'Esta reserva foi cancelada.',
   COMPLETED: 'Esta reserva já foi concluída.',
@@ -25,16 +26,20 @@ export default function PaymentReturn({ bookingId, onLogin, onGoToBookings, onGo
     async function checkBooking(remainingChecks) {
       try {
         // verifica o dono e devolve o status gravado pelo backend depois do webhook.
-        const booking = await apiRequest(`/bookings/${bookingId}`, {
+        const result = await apiRequest(`/bookings/${bookingId}/payment-status`, {
           cache: 'no-store',
           signal: controller.signal,
         });
         if (controller.signal.aborted) return;
 
-        setStatus(booking.status);
+        // Reservas canceladas, concluídas ou confirmadas têm prioridade.
+        const displayStatus = result.bookingStatus === 'PENDING' && result.paymentStatus === 'REJECTED'
+          ? 'REJECTED'
+          : result.bookingStatus;
+        setStatus(displayStatus);
         // O navegador pode voltar primeiro. Repetimos por até 20 segundos
         // enquanto a reserva estiver pendente. Depois o usuário pode consultar de novo.
-        if (booking.status === 'PENDING' && remainingChecks > 0) {
+        if (displayStatus === 'PENDING' && remainingChecks > 0) {
           timer = window.setTimeout(() => checkBooking(remainingChecks - 1), 4000);
         }
       } catch (requestError) {
