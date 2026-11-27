@@ -29,6 +29,16 @@ public class Payment {
 
     private LocalDateTime processedAt;
 
+    // Dados do checkout criado no PagBank (migração V11). Todos Opcionais: um pagamento
+    @Column(name = "provider_checkout_id", length = 60)
+    private String providerCheckoutId;  // ex.: CHEC_XXXX
+
+    @Column(name = "checkout_url", length = 500)
+    private String checkoutUrl;         // link da página de pagamento do PagBank
+
+    @Column(name = "expires_at")
+    private LocalDateTime expiresAt;    // até quando o checkout vale
+
     public Payment() {
 
     }
@@ -88,5 +98,29 @@ public class Payment {
 
     public void setProcessedAt(LocalDateTime processedAt) {
         this.processedAt = processedAt;
+    }
+
+    public String getProviderCheckoutId() {
+        return providerCheckoutId;
+    }
+
+    public void setProviderCheckoutId(String providerCheckoutId) {
+        this.providerCheckoutId = providerCheckoutId;
+    }
+
+    public String getCheckoutUrl() {
+        return checkoutUrl;
+    }
+
+    public void setCheckoutUrl(String checkoutUrl) {
+        this.checkoutUrl = checkoutUrl;
+    }
+
+    public LocalDateTime getExpiresAt() {
+        return expiresAt;
+    }
+
+    public void setExpiresAt(LocalDateTime expiresAt) {
+        this.expiresAt = expiresAt;
     }
 }

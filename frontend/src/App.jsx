@@ -5,6 +5,11 @@ import Register from './pages/Register/Register';
 import UserPanel from './user/UserPanel';
 import Admin from './admin/Admin';
 import Homepage from './pages/Homepage/Homepage';
+import PaymentReturn from './user/PaymentReturn';
+import { API_URL } from './apiConfig';
+
+const paymentReturnPath = '/pagamento/retorno';
+const paymentReturnSessionKey = 'destinify.pagbankReturn';
 
 function App() {
   const [paymentBooking, setPaymentBooking] = useState(null);
@@ -13,8 +18,11 @@ function App() {
   // Abre o catálogo público e processa retornos do Google quando necessário.
   const [paginaAtual, setPaginaAtual] = useState(() => {
     const ticket = new URLSearchParams(window.location.hash.slice(1)).get('googleTicket');
-    
-    return ticket ? 'checking' : 'home';
+
+    if (ticket) return 'checking';
+
+    // ADICIONADO: o PagBank recarrega a aplicação nesta URL.
+    return window.location.pathname === paymentReturnPath ? 'paymentReturn' : 'home';
   });
 
   React.useEffect(() => {
@@ -28,7 +36,7 @@ function App() {
 
         if (ticket) {
           if (!googleExchange.current) {
-            googleExchange.current = fetch('http://localhost:8080/api/auth/login/google/exchange', {
+            googleExchange.current = fetch(`${API_URL}/auth/login/google/exchange`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
               body: new URLSearchParams({ ticket }),
@@ -43,19 +51,28 @@ function App() {
 
           localStorage.setItem('accessToken', tokens.accessToken);
           localStorage.setItem('refreshToken', tokens.refreshToken);
-          window.history.replaceState(null, '', window.location.pathname + window.location.search);
+          // O login Google volta pela página inicial. Recuperamos a URL da
+          // reserva guardada nesta aba antes de abrir o formulário de login.
+          const retorno = sessionStorage.getItem(paymentReturnSessionKey);
+          window.history.replaceState(null, '', retorno || window.location.pathname + window.location.search);
           token = tokens.accessToken;
         }
 
         if (!token) throw new Error('Sessão ausente');
         const headers = { Authorization: `Bearer ${token}` };
-        const adminResponse = await fetch('http://localhost:8080/api/users/all-users', { headers });
+
+        if (window.location.pathname === paymentReturnPath) {
+          sessionStorage.removeItem(paymentReturnSessionKey);
+          setPaginaAtual('paymentReturn');
+          return;
+        }
+        const adminResponse = await fetch(`${API_URL}/users/all-users`, { headers });
         if (adminResponse.ok) {
           if (active) setPaginaAtual('home');
           return;
         }
         if (adminResponse.status === 403) {
-          const userResponse = await fetch('http://localhost:8080/api/users/me', { headers });
+          const userResponse = await fetch(`${API_URL}/users/me`, { headers });
           if (userResponse.ok) {
             if (active) setPaginaAtual('home');
             return;
@@ -82,13 +99,24 @@ function App() {
   React.useEffect(() => {
     if (paginaAtual !== 'userPanel' || paymentBooking) return;
     let active = true;
-    fetch('http://localhost:8080/api/users/all-users', {
+    fetch(`${API_URL}/users/all-users`, {
       headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` },
     }).then((response) => {
       if (active && response.ok) setPaginaAtual('admin');
     }).catch(() => {});
     return () => { active = false; };
   }, [paginaAtual, paymentBooking]);
+
+  function loginForPaymentReturn() {
+    sessionStorage.setItem(paymentReturnSessionKey, paymentReturnPath + window.location.search);
+    setPaginaAtual('login');
+  }
+
+  function leavePaymentReturn(page) {
+    sessionStorage.removeItem(paymentReturnSessionKey);
+    window.history.replaceState(null, '', '/');
+    setPaginaAtual(page);
+  }
 
   function leaveAccount(page) {
     setPaymentBooking(null);
@@ -107,7 +135,16 @@ function App() {
       {paginaAtual === 'home' && (
         <Homepage setPaginaAtual={setPaginaAtual} onBookingCreated={openBookingPayment} />
       )}
-      
+
+      {paginaAtual === 'paymentReturn' && (
+        <PaymentReturn
+          bookingId={new URLSearchParams(window.location.search).get('reserva')}
+          onLogin={loginForPaymentReturn}
+          onGoToBookings={() => leavePaymentReturn('userPanel')}
+          onGoHome={() => leavePaymentReturn('home')}
+        />
+      )}
+
       {paginaAtual === 'login' && (
         <Login setPaginaAtual={setPaginaAtual} />
       )}

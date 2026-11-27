@@ -17,8 +17,9 @@ public class LoginGoogleService {
     @Value("${google.oauth.client.secret}")
     private String clientSecret;
 
-    private final String redirectUri =
-            "http://localhost:8080/api/auth/login/google/autorizado";
+    // Endereço do backend para onde o Google devolve o usuário. Em produção vem de GOOGLE_REDIRECT_URI.
+    @Value("${destinify.google.redirect-uri:http://localhost:8080/api/auth/login/google/autorizado}")
+    private String redirectUri = "http://localhost:8080/api/auth/login/google/autorizado";
 
     private final RestClient restClient;
 

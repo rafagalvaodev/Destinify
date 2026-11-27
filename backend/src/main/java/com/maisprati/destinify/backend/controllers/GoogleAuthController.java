@@ -8,6 +8,7 @@ import com.maisprati.destinify.backend.servicies.GoogleLoginTicketService;
 import com.maisprati.destinify.backend.servicies.LoginGoogleService;
 import com.maisprati.destinify.backend.servicies.TokenService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -40,6 +41,10 @@ public class GoogleAuthController {
     @Autowired
     private GoogleLoginTicketService googleLoginTicketService;
 
+    // Endereço do frontend para onde o usuário volta depois do Google. Em produção vem de FRONTEND_URL.
+    @Value("${destinify.frontend-url:http://localhost:5173}")
+    private String frontendUrl = "http://localhost:5173";
+
 
     @GetMapping
     public ResponseEntity<Void> redirecionarGoogle(){
@@ -57,14 +62,14 @@ public class GoogleAuthController {
 
         User user = userRepository.findByEmailIgnoreCase(email)
                 .orElseGet(() -> {
-                        User newUser = new User();
-                        newUser.setEmail(email);
-                        newUser.setName(email.substring(0, email.indexOf('@')));
-                        newUser.setRole(Role.CLIENT);
+                    User newUser = new User();
+                    newUser.setEmail(email);
+                    newUser.setName(email.substring(0, email.indexOf('@')));
+                    newUser.setRole(Role.CLIENT);
 
-                        String randomPassword = UUID.randomUUID().toString();
-                        newUser.setPassword(passwordEncoder.encode(randomPassword));
-                        return userRepository.save(newUser);
+                    String randomPassword = UUID.randomUUID().toString();
+                    newUser.setPassword(passwordEncoder.encode(randomPassword));
+                    return userRepository.save(newUser);
                 });
         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(authentication);
@@ -75,7 +80,7 @@ public class GoogleAuthController {
         String ticket = googleLoginTicketService.create(new TokenResponseDTO(tokenAcesso, refreshToken));
 
         return ResponseEntity.status(HttpStatus.FOUND)
-                .location(URI.create("http://localhost:5173/#googleTicket=" + ticket)).build();
+                .location(URI.create(frontendUrl.replaceAll("/+$", "") + "/#googleTicket=" + ticket)).build();
     }
 
     @PostMapping("/google/exchange")

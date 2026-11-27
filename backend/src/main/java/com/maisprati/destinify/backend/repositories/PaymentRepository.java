@@ -17,5 +17,12 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
 
     List<Payment> findByBookingIdOrderByCreatedAtDesc(Long bookingId);
 
+    Optional<Payment> findFirstByBookingIdOrderByCreatedAtDescIdDesc(Long bookingId);
+
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    Optional<Payment> findLockedById(Long id);
+
+    Optional<Payment> findByProviderCheckoutId(String providerCheckoutId);
+
 
 }

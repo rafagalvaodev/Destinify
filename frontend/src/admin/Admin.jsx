@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import './Admin.css';
+import { API_URL } from '../apiConfig';
 
-const API = 'http://localhost:8080/api';
+const API = API_URL;
 const tabs = ['hotels', 'rooms', 'bookings', 'users'];
 const titles = { hotels: 'Hotéis', rooms: 'Quartos', bookings: 'Reservas', users: 'Usuários' };
 const paths = { hotels: '/hotels', rooms: '/rooms/all', bookings: '/bookings/all', users: '/users/all-users' };

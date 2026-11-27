@@ -93,7 +93,7 @@ export default function Homepage({ setPaginaAtual, onBookingCreated }) {
           </nav>
         </div>
         <section className="header__title"><h1>Encontre o lugar perfeito para sua estadia!</h1><h2>Conheça os hotéis e escolha seu próximo destino.</h2></section>
-        
+
         <form className="header__search" onSubmit={search}>
           <div className="header__input"><label htmlFor="catalog-city">Escolha seu destino</label>
             <input id="catalog-city" type="text" placeholder="Para onde planeja ir?" value={city} onChange={(event) => setCity(event.target.value)} /></div>

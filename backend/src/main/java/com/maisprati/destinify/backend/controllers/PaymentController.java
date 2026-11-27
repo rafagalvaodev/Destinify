@@ -1,12 +1,12 @@
 package com.maisprati.destinify.backend.controllers;
 
 import com.maisprati.destinify.backend.domain.User;
-import com.maisprati.destinify.backend.domain.dto.PaymentDTO.PaymentResponse;
-import com.maisprati.destinify.backend.domain.enums.PaymentStatus;
+import com.maisprati.destinify.backend.domain.dto.PaymentDTO.CheckoutResponse;
 import com.maisprati.destinify.backend.servicies.PaymentService;
-import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,47 +16,24 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/bookings")
 public class PaymentController {
 
-    @Autowired
     private PaymentService paymentService;
 
-//    @PostMapping("/{bookingId}/payment")
-//    public ResponseEntity<PaymentResponse> create(
-//            @PathVariable Long bookingId,
-//            @AuthenticationPrincipal User loggedUser) {
-//        return ResponseEntity.ok(paymentService.createPayment(bookingId, loggedUser));
-//    }
-//
-//    @PostMapping("/{bookingId}/payment/{paymentId}/approve")
-//    public ResponseEntity<PaymentResponse> approve(
-//            @PathVariable Long bookingId,
-//            @PathVariable Long paymentId,
-//            @AuthenticationPrincipal User loggedUser) {
-//        return ResponseEntity.ok(paymentService.processPayment(
-//                bookingId,
-//                paymentId,
-//                loggedUser,
-//                PaymentStatus.APPROVED));
-//    }
-//
-//    @PostMapping("/{bookingId}/payment/{paymentId}/reject")
-//    public ResponseEntity<PaymentResponse> reject(
-//            @PathVariable Long bookingId,
-//            @PathVariable Long paymentId,
-//            @AuthenticationPrincipal User loggedUser) {
-//        return ResponseEntity.ok(paymentService.processPayment(
-//                bookingId,
-//                paymentId,
-//                loggedUser,
-//                PaymentStatus.REJECTED));
-//    }
+    public PaymentController(PaymentService paymentService) {
+        this.paymentService = paymentService;
+    }
 
-    @PostMapping("/{bookingId}/pay")
-    public ResponseEntity<PaymentResponse> pay(
+    @GetMapping("/{bookingId}/payment-status")
+    public PaymentService.ReturnStatus paymentStatus(
+            @PathVariable Long bookingId, @AuthenticationPrincipal User loggedUser) {
+        return paymentService.getReturnStatus(bookingId, loggedUser);
+    }
+
+    @PostMapping("/{bookingId}/checkout")
+    public ResponseEntity<CheckoutResponse> checkout(
             @PathVariable Long bookingId,
             @AuthenticationPrincipal User loggedUser) {
+        CheckoutResponse response = paymentService.startCheckout(bookingId, loggedUser);
 
-        PaymentResponse pay = paymentService.pay(bookingId, loggedUser);
-
-        return ResponseEntity.ok(pay);
+        return ResponseEntity.ok(response);
     }
 }
